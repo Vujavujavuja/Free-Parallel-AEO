@@ -10,7 +10,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+/dist/
 downloads/
 eggs/
 .eggs/
@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Free-Parallel-AEO runtime ---
+/data/
+!/data/.gitkeep
+/reports/
+# Ship the prebuilt SPA even though "dist/" is ignored generically above.
+!src/aeo/web/dist/
+!src/aeo/web/dist/**
