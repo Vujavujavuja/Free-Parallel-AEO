@@ -16,6 +16,7 @@ project virtualenv once dependencies are available.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import shutil
 import subprocess
@@ -61,7 +62,7 @@ def ensure_env_file() -> None:
 
 
 def _deps_available(python: Path | str) -> bool:
-    probe = "import fastapi, typer, aeo"  # noqa: F401
+    probe = "import fastapi, typer, aeo"
     result = subprocess.run(
         [str(python), "-c", probe], capture_output=True, cwd=ROOT
     )
@@ -127,16 +128,12 @@ def launch(python: Path, args: list[str]) -> int:
         return subprocess.call([str(python), "-m", "aeo", *args], cwd=ROOT)
 
     # No args: serve + open browser.
-    from urllib.request import urlopen  # noqa: F401  (kept stdlib-only)
-
     host = os.environ.get("HOST", "127.0.0.1")
     port = os.environ.get("PORT", "8000")
     url = f"http://{host}:{port}"
     _log(f"Starting server at {url}")
-    try:
+    with contextlib.suppress(Exception):
         webbrowser.open(url)
-    except Exception:  # noqa: BLE001  (best-effort convenience)
-        pass
     return subprocess.call([str(python), "-m", "aeo", "serve"], cwd=ROOT)
 
 

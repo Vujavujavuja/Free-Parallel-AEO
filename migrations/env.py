@@ -9,7 +9,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from aeo.db import Base  # noqa: F401  (imports all models onto Base.metadata)
+from aeo.db import Base
 from aeo.db.session import _ensure_sqlite_dir
 from aeo.settings import get_settings
 

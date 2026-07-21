@@ -13,6 +13,7 @@ import sys
 from typing import Any
 
 import structlog
+from structlog.typing import EventDict, WrappedLogger
 
 _SECRET_RE = re.compile(r"sk-or-[A-Za-z0-9._-]+")
 _REDACTED = "***REDACTED***"

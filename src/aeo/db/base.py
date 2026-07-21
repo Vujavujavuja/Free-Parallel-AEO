@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, ClassVar
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.types import JSON
+from sqlalchemy.types import JSON, TypeEngine
 
 
 def new_uuid() -> str:
@@ -22,7 +22,10 @@ def utcnow() -> datetime:
 class Base(DeclarativeBase):
     """Declarative base with a portable JSON type."""
 
-    type_annotation_map = {dict[str, Any]: JSON, list[Any]: JSON}
+    type_annotation_map: ClassVar[dict[Any, type[TypeEngine[Any]]]] = {
+        dict[str, Any]: JSON,
+        list[Any]: JSON,
+    }
 
 
 class UUIDMixin:
