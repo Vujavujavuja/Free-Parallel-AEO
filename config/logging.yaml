@@ -1,0 +1,25 @@
+# Standard-library logging config consumed alongside structlog (see aeo.logging).
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  plain:
+    format: "%(asctime)s %(levelname)-8s %(name)s %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: plain
+    stream: ext://sys.stdout
+
+root:
+  level: INFO
+  handlers: [console]
+
+loggers:
+  uvicorn.error:
+    level: INFO
+  uvicorn.access:
+    level: WARNING
+  httpx:
+    level: WARNING
