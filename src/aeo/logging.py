@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 import re
 import sys
-from typing import Any
 
 import structlog
 from structlog.typing import EventDict, WrappedLogger
@@ -21,8 +20,8 @@ _configured = False
 
 
 def _redact_secrets(
-    _logger: Any, _method: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+    _logger: WrappedLogger, _method: str, event_dict: EventDict
+) -> EventDict:
     """structlog processor that scrubs anything resembling an OpenRouter key."""
     for key, value in list(event_dict.items()):
         if isinstance(value, str) and _SECRET_RE.search(value):
