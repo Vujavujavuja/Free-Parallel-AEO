@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, type ModelInfo, type Provider, type SourceDocument } from "../api";
 
 const perMillion = (v: number) => (v > 0 ? `$${(v * 1_000_000).toFixed(2)}` : "—");
@@ -11,6 +11,10 @@ const linesToArr = (s: string) =>
 
 export default function NewRun() {
   const nav = useNavigate();
+  const [params] = useSearchParams();
+  const fromRun = params.get("from");
+  const editMode = params.get("edit") === "1";
+  const [preset, setPreset] = useState<string | null>(null);
   const [provider, setProvider] = useState<Provider>("stub");
   const [hasKey, setHasKey] = useState(false);
   const [catalog, setCatalog] = useState<ModelInfo[]>([]);
@@ -52,6 +56,34 @@ export default function NewRun() {
       setProvider(h.openrouter_key_present ? "openrouter" : "stub");
     });
   }, []);
+
+  // Pre-fill the form from a past run when arriving via "Re-run" (?from=<id>).
+  useEffect(() => {
+    if (!fromRun) return;
+    api.getRun(fromRun).then((r) => {
+      const c = r.company;
+      setForm({
+        name: c.name ?? "",
+        website: c.website ?? "",
+        category: c.category ?? "",
+        description: c.description ?? "",
+        products: (c.products ?? []).join(", "),
+        competitors: (c.competitors ?? []).join(", "),
+        aliases: (c.aliases ?? []).join(", "),
+        regions: (c.regions ?? []).join(", "),
+        referenceSites: (c.reference_sites ?? []).join(", "),
+        notes: c.notes ?? "",
+      });
+      setDocuments(c.source_documents ?? []);
+      setCustomQuestions((r.options.custom_questions ?? []).join("\n"));
+      setSelected(r.options.target_models ?? []);
+      setQuestionCount(r.options.question_count ?? 10);
+      setWebSearch(r.options.enable_web_search ?? false);
+      setCostCap(r.options.cost_cap_usd ?? 5);
+      setAutoApprove(r.options.auto_approve_questions ?? true);
+      setPreset(c.name);
+    });
+  }, [fromRun]);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
@@ -150,6 +182,10 @@ export default function NewRun() {
         cost_cap_usd: costCap,
         custom_questions: linesToArr(customQuestions),
       });
+      // In edit mode, replace the original run (delete after the new one exists).
+      if (editMode && fromRun) {
+        await api.deleteRun(fromRun).catch(() => undefined);
+      }
       nav(`/runs/${rec.id}`);
     } catch (e) {
       setError((e as Error).message);
@@ -158,6 +194,21 @@ export default function NewRun() {
   }
 
   return (
+    <div className="space-y-4">
+      {preset && (
+        <div className="card border-blue-600/40 bg-blue-600/10 text-sm flex items-center justify-between">
+          <span>
+            {editMode ? (
+              <>Editing <strong>{preset}</strong> — running will <strong>replace</strong> the original run.</>
+            ) : (
+              <>Reusing settings from a previous run of <strong>{preset}</strong>. Change the models and run again.</>
+            )}
+          </span>
+          <button className="text-slate-400 hover:text-white text-xs" onClick={() => { setPreset(null); nav("/", { replace: true }); }}>
+            start blank
+          </button>
+        </div>
+      )}
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-6">
         <div className="card">
@@ -357,9 +408,10 @@ export default function NewRun() {
         {error && <div className="card border-red-500/50 text-red-400 text-sm">{error}</div>}
 
         <button className="btn-primary w-full" onClick={submit} disabled={submitting || !form.name}>
-          {submitting ? "Starting…" : "Run Scan"}
+          {submitting ? "Starting…" : editMode ? "Save & re-run" : "Run Scan"}
         </button>
       </div>
+    </div>
     </div>
   );
 }

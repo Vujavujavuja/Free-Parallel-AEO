@@ -30,6 +30,7 @@ export default function Runs() {
             <th className="th">Questions</th>
             <th className="th">Cost</th>
             <th className="th">Created</th>
+            <th className="th"></th>
           </tr>
         </thead>
         <tbody>
@@ -46,6 +47,11 @@ export default function Runs() {
               <td className="td">{r.num_questions}</td>
               <td className="td">${r.total_cost_usd.toFixed(4)}</td>
               <td className="td text-slate-400">{new Date(r.created_at).toLocaleString()}</td>
+              <td className="td whitespace-nowrap">
+                <Link to={`/?from=${r.id}`} className="text-blue-400 hover:underline text-xs">Re-run</Link>
+                <span className="text-slate-600 mx-2">·</span>
+                <Link to={`/?from=${r.id}&edit=1`} className="text-blue-400 hover:underline text-xs">Edit</Link>
+              </td>
             </tr>
           ))}
         </tbody>

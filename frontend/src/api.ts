@@ -107,7 +107,15 @@ export interface RunRecord {
   status: string;
   stage_detail?: string | null;
   company: CompanyProfile;
-  options: { target_models: string[]; question_count: number; provider: string };
+  options: {
+    target_models: string[];
+    question_count: number;
+    provider: string;
+    custom_questions?: string[];
+    enable_web_search?: boolean;
+    cost_cap_usd?: number;
+    auto_approve_questions?: boolean;
+  };
   questions: Question[];
   competitors: string[];
   brand_aliases: string[];

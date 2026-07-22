@@ -54,6 +54,8 @@ export default function RunView() {
         </div>
         <div className="flex items-center gap-3">
           <StatusPill status={run.status} />
+          <Link to={`/?from=${run.id}&edit=1`} className="btn-ghost text-sm">Edit</Link>
+          <Link to={`/?from=${run.id}`} className="btn-ghost text-sm">Re-run</Link>
           <Link to="/runs" className="btn-ghost text-sm">All runs</Link>
         </div>
       </div>
