@@ -5,6 +5,7 @@
 host = "127.0.0.1"
 port = 8000
 log_level = "INFO"
+data_dir = "./data"     # runs are stored as folders under {data_dir}/runs/{run_id}/
 
 [orchestrator]
 model = "anthropic/claude-opus-4.8"
@@ -18,9 +19,6 @@ concurrency = 6
 cost_cap_usd = 5.0
 auto_approve_questions = true
 max_continuations = 4            # truncation auto-continue cap
-
-[database]
-url = "sqlite:///./data/aeo.db"
 
 [openrouter]
 base_url = "https://openrouter.ai/api/v1"

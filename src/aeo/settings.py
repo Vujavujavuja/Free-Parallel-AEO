@@ -27,6 +27,7 @@ _TOML_FIELD_MAP: dict[str, tuple[str, str]] = {
     "host": ("app", "host"),
     "port": ("app", "port"),
     "log_level": ("app", "log_level"),
+    "data_dir": ("app", "data_dir"),
     "orchestrator_model": ("orchestrator", "model"),
     "question_count": ("orchestrator", "question_count"),
     "prompt_mode": ("run", "prompt_mode"),
@@ -36,7 +37,6 @@ _TOML_FIELD_MAP: dict[str, tuple[str, str]] = {
     "cost_cap_usd": ("run", "cost_cap_usd"),
     "auto_approve_questions": ("run", "auto_approve_questions"),
     "max_continuations": ("run", "max_continuations"),
-    "database_url": ("database", "url"),
     "openrouter_base_url": ("openrouter", "base_url"),
     "openrouter_http_referer": ("openrouter", "http_referer"),
     "openrouter_x_title": ("openrouter", "x_title"),
@@ -97,8 +97,8 @@ class Settings(BaseSettings):
     auto_approve_questions: bool = True
     max_continuations: int = 4
 
-    # --- persistence ---
-    database_url: str = "sqlite:///./data/aeo.db"
+    # --- persistence: runs are stored as folders on disk (see aeo.storage) ---
+    data_dir: str = "./data"
 
     # --- openrouter client ---
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
@@ -120,14 +120,14 @@ class Settings(BaseSettings):
         return bool(self.openrouter_api_key.get_secret_value())
 
     @property
-    def async_database_url(self) -> str:
-        """SQLAlchemy async URL (aiosqlite / asyncpg driver) derived from database_url."""
-        url = self.database_url
-        if url.startswith("sqlite:///"):
-            return url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
-        if url.startswith("postgresql://"):
-            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        return url
+    def data_path(self) -> Path:
+        """Root directory for on-disk run storage."""
+        return Path(self.data_dir).expanduser()
+
+    @property
+    def runs_path(self) -> Path:
+        """Directory holding one folder per run."""
+        return self.data_path / "runs"
 
     @classmethod
     def settings_customise_sources(

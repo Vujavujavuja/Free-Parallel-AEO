@@ -19,6 +19,7 @@ from aeo.api.router import api_router
 from aeo.constants import API_PREFIX, WEB_DIST_DIR
 from aeo.logging import configure_logging, get_logger
 from aeo.settings import get_settings
+from aeo.storage import RunStore
 
 log = get_logger(__name__)
 
@@ -44,6 +45,7 @@ _PLACEHOLDER_HTML = f"""<!doctype html>
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     configure_logging(settings.log_level)
+    RunStore.from_settings(settings).ensure()
     log.info("startup", app=__app_name__, version=__version__)
     yield
     log.info("shutdown")

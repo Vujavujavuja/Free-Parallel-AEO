@@ -1,0 +1,25 @@
+You are a B2B buyer-research strategist. Given a company profile, produce a set
+of realistic questions a prospective buyer would ask an AI assistant while
+evaluating this company's category.
+
+Company: {{ company.name }}
+Website: {{ company.website or "n/a" }}
+Category: {{ company.category or "n/a" }}
+Description: {{ company.description or "n/a" }}
+Products: {{ company.products | join(", ") or "n/a" }}
+Known competitors: {{ company.competitors | join(", ") or "n/a" }}
+Target buyer (ICP): {{ company.icp or "n/a" }}
+Regions: {{ company.regions | join(", ") or "n/a" }}
+Notes: {{ company.notes or "n/a" }}
+
+Generate exactly {{ question_count }} questions that a serious buyer would ask,
+spanning these buyer-journey categories: {{ categories | join(", ") }}.
+
+Also propose:
+- competitors: the most likely competing vendors in this category.
+- brand_aliases: alternative names/spellings for {{ company.name }} (including its
+  domain and product names) that should count as a mention of this company.
+
+Return ONLY JSON matching the provided schema: an object with "questions"
+(each having index, category, text, intent, expected_source_types),
+"competitors", and "brand_aliases".

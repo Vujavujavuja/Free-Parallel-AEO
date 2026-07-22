@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help dev test lint typecheck fmt build run docker migrate clean
+.PHONY: help dev test lint typecheck fmt build run docker clean
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -20,9 +20,6 @@ typecheck:  ## Run mypy --strict
 
 test:  ## Run the test suite with coverage
 	pytest --cov=aeo --cov-report=term-missing
-
-migrate:  ## Apply DB migrations to head
-	alembic upgrade head
 
 run:  ## Bootstrap everything and serve the UI
 	python run.py

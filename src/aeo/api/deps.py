@@ -1,25 +1,14 @@
-"""Shared FastAPI dependencies: DB session and optional bearer-token auth."""
+"""Shared FastAPI dependencies: settings and optional bearer-token auth."""
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from aeo.db.session import get_session
 from aeo.settings import Settings, get_settings
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
-
-
-async def db_session() -> AsyncIterator[AsyncSession]:
-    async for session in get_session():
-        yield session
-
-
-DBSession = Annotated[AsyncSession, Depends(db_session)]
 
 
 async def require_auth(

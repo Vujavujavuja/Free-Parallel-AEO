@@ -1,0 +1,23 @@
+# Example company profile. Run a free demo with:
+#   python -m aeo scan --company examples/acme.yaml --stub
+name: Acme Synthetic Data
+website: https://acme.com
+category: Synthetic data platform
+description: >
+  Acme generates privacy-safe synthetic data so teams can build and test
+  software without touching real customer records.
+products:
+  - Acme SDK
+  - Acme Cloud
+icp: Data and ML engineering teams at mid-market and enterprise companies.
+competitors:
+  - Gretel
+  - Mostly AI
+  - Tonic
+aliases:
+  - Acme
+  - AcmeData
+regions:
+  - North America
+  - Europe
+notes: Strong in regulated industries (healthcare, finance).

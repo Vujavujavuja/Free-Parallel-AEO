@@ -9,9 +9,10 @@ hands off to the ``aeo`` Typer CLI. Usage::
     python run.py doctor                # diagnostics
     python run.py serve --port 8080
 
-Steps: preflight -> ensure .env -> provision venv+deps (idempotent) -> migrate
-DB -> build frontend if needed -> launch. It re-executes itself inside the
-project virtualenv once dependencies are available.
+Steps: preflight -> ensure .env -> provision venv+deps (idempotent) -> ensure
+data dirs -> build frontend if needed -> launch. It re-executes itself inside
+the project virtualenv once dependencies are available. Runs are stored as
+folders under ./data/runs/ — there is no database to migrate.
 """
 
 from __future__ import annotations
@@ -96,13 +97,9 @@ def ensure_environment() -> Path:
     return target
 
 
-def run_migrations(python: Path) -> None:
-    (ROOT / "data").mkdir(exist_ok=True)
-    _log("Applying database migrations...")
-    try:
-        subprocess.check_call([str(python), "-m", "alembic", "upgrade", "head"], cwd=ROOT)
-    except subprocess.CalledProcessError:
-        _log("Migration step failed — continuing (check `alembic` config).")
+def ensure_data_dirs() -> None:
+    """Create the on-disk run storage directories (no database)."""
+    (ROOT / "data" / "runs").mkdir(parents=True, exist_ok=True)
 
 
 def ensure_frontend(python: Path) -> None:
@@ -154,7 +151,7 @@ def main() -> int:
             os.environ[_REEXEC_FLAG] = "1"
             return subprocess.call([str(python), str(ROOT / "run.py"), *args], cwd=ROOT)
 
-    run_migrations(python)
+    ensure_data_dirs()
     if not args or args[0] in {"serve"}:
         ensure_frontend(python)
     return launch(python, args)
