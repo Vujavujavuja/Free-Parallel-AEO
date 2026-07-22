@@ -82,7 +82,7 @@ def _mount_spa(app: FastAPI) -> None:
     if assets.is_dir():
         app.mount("/assets", StaticFiles(directory=assets), name="assets")
 
-    @app.get("/{full_path:path}", include_in_schema=False)
+    @app.get("/{full_path:path}", include_in_schema=False, response_model=None)
     async def spa(full_path: str, request: Request) -> FileResponse | HTMLResponse:
         # Never shadow the API or docs.
         if full_path.startswith(("api/", "docs", "openapi.json", "redoc")):
