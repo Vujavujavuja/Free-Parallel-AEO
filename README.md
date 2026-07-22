@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/parallel-aeo_dots.png" alt="Free-Parallel-AEO" width="400">
+</p>
+
 # Free-Parallel-AEO
 
 An open-source, self-hostable AI brand-visibility scanner. You enter a company
@@ -40,7 +44,7 @@ tests, not for real analysis.
 
 ## Setup and running
 
-Clone the repository and run the single entry point:
+If you already work with Python, this is the whole thing:
 
 ```bash
 git clone https://github.com/Vujavujavuja/Free-Parallel-AEO.git
@@ -49,10 +53,67 @@ python run.py
 ```
 
 `run.py` is self-contained. On first run it creates a virtual environment
-(using `uv` if available, otherwise `venv` + `pip`), installs dependencies,
+(using `uv` if available, otherwise `venv` + `pip`), installs all dependencies,
 prepares the local data directory, starts the server, and opens the browser.
 Subsequent runs skip the steps already completed. The default address is
-<http://127.0.0.1:8000>.
+<http://127.0.0.1:8000>. You do not need to install the requirements yourself;
+`run.py` does it.
+
+### Step by step (no prior Python experience)
+
+**1. Install Python (version 3.11 or newer).**
+
+- **Windows:** download the installer from
+  <https://www.python.org/downloads/>, run it, and on the first screen tick
+  **"Add python.exe to PATH"** before clicking Install.
+- **macOS:** download the installer from <https://www.python.org/downloads/> and
+  run it. (macOS ships an old Python; installing from python.org avoids issues.)
+- **Linux:** install with your package manager, for example
+  `sudo apt install python3 python3-venv` on Debian/Ubuntu.
+
+To confirm it worked, open a terminal (see step 3) and type `python --version`
+(or `python3 --version` on macOS/Linux). It should print 3.11 or higher.
+
+**2. Download this project.**
+
+- Easiest: on the GitHub page, click the green **Code** button, choose
+  **Download ZIP**, then unzip it. You will get a folder named
+  `Free-Parallel-AEO`.
+- Or, if you have Git installed:
+  `git clone https://github.com/Vujavujavuja/Free-Parallel-AEO.git`.
+
+**3. Open a terminal in that folder.**
+
+- **Windows:** open the `Free-Parallel-AEO` folder in File Explorer, click the
+  address bar, type `cmd`, and press Enter.
+- **macOS:** open the Terminal app, type `cd ` (with a space), drag the
+  `Free-Parallel-AEO` folder onto the window, and press Enter.
+- **Linux:** right-click the folder and choose "Open Terminal Here", or `cd` into
+  it.
+
+**4. Start it.**
+
+```bash
+python run.py
+```
+
+On macOS/Linux, if `python` is not found, use `python3 run.py`.
+
+The first launch takes a few minutes while it installs everything; later launches
+are fast. When it is ready it opens your browser at
+<http://127.0.0.1:8000>. If the browser does not open, type that address into it
+manually.
+
+**5. Stop it** by returning to the terminal and pressing `Ctrl` + `C`.
+
+### Installing the dependencies manually (optional)
+
+You do not normally need this — `run.py` handles it. If you prefer to install the
+Python packages yourself:
+
+```bash
+python -m pip install -r requirements.txt
+```
 
 ### Providing the API key
 
