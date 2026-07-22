@@ -216,17 +216,17 @@ def _sources_sheet(wb: Workbook, analysis: AnalysisResult) -> None:
 
 def _domain_frequency_sheet(wb: Workbook, analysis: AnalysisResult) -> None:
     ws = wb.create_sheet("Domain Frequency")
-    _header(ws, ["Domain", "#Models Citing", "Models", "Brand-owned?"])
+    _header(ws, ["Domain", "#Models Citing", "Models", "Brand-owned?", "Reference?"])
     for i, d in enumerate(analysis.domain_frequency):
         row = i + 2
         ws.cell(row=row, column=1, value=sanitize_cell(d.domain))
         ws.cell(row=row, column=2, value=d.num_models)
         ws.cell(row=row, column=3, value=sanitize_cell(", ".join(d.models))).alignment = _WRAP
-        flag = ws.cell(row=row, column=4, value="Yes" if d.brand_owned else "No")
+        ws.cell(row=row, column=4, value="Yes" if d.brand_owned else "No")
+        ws.cell(row=row, column=5, value="Yes" if d.is_reference else "No")
         if d.brand_owned:
-            for col in range(1, 5):
+            for col in range(1, 6):
                 ws.cell(row=row, column=col).fill = _BRAND_FILL
-        flag.value = "Yes" if d.brand_owned else "No"
     ws.column_dimensions["A"].width = 30
     ws.column_dimensions["C"].width = 50
 

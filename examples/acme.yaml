@@ -9,7 +9,6 @@ description: >
 products:
   - Acme SDK
   - Acme Cloud
-icp: Data and ML engineering teams at mid-market and enterprise companies.
 competitors:
   - Gretel
   - Mostly AI
@@ -20,4 +19,7 @@ aliases:
 regions:
   - North America
   - Europe
+reference_sites:
+  - https://g2.com
+  - https://gartner.com
 notes: Strong in regulated industries (healthcare, finance).

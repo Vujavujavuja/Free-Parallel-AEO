@@ -20,6 +20,7 @@ from aeo.constants import RunStatus
 from aeo.core import orchestrator, runner
 from aeo.logging import get_logger
 from aeo.providers.base import LLMProvider
+from aeo.schemas.question import Question
 from aeo.schemas.run import RunRecord
 from aeo.storage import RunStore
 from aeo.utils import utcnow
@@ -64,16 +65,37 @@ async def execute_pipeline(
             )
 
     try:
-        # 1. Questions
+        # 1. Questions (custom exact questions + orchestrator-generated remainder)
         await _set(RunStatus.GENERATING_QUESTIONS, "Generating buyer questions")
-        question_set = await orchestrator.generate_questions(
-            provider, record.company,
-            model=record.options.orchestrator_model,
-            question_count=record.options.question_count,
-        )
-        record.questions = question_set.questions
-        record.competitors = _merge(record.company.competitors, question_set.competitors)
-        record.brand_aliases = _merge(record.company.aliases, question_set.brand_aliases)
+        custom = [q.strip() for q in record.options.custom_questions if q.strip()]
+        needed = max(0, record.options.question_count - len(custom))
+
+        generated: list[Question] = []
+        gen_competitors: list[str] = []
+        gen_aliases: list[str] = []
+        if needed > 0:
+            question_set = await orchestrator.generate_questions(
+                provider, record.company,
+                model=record.options.orchestrator_model,
+                question_count=needed,
+                documents=record.company.source_documents,
+                existing_questions=custom,
+            )
+            generated = question_set.questions
+            gen_competitors = question_set.competitors
+            gen_aliases = question_set.brand_aliases
+
+        custom_qs = [
+            Question(index=0, category="custom", text=t, intent="user-provided")
+            for t in custom
+        ]
+        merged_questions = custom_qs + generated
+        record.questions = [
+            q.model_copy(update={"index": i + 1})
+            for i, q in enumerate(merged_questions)
+        ]
+        record.competitors = _merge(record.company.competitors, gen_competitors)
+        record.brand_aliases = _merge(record.company.aliases, gen_aliases)
         record.company.aliases = record.brand_aliases
         store.save_run(record.model_dump(mode="json"))
 

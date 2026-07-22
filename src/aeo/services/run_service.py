@@ -63,6 +63,30 @@ async def execute_run(
         await provider.aclose()
 
 
+async def resume_run(
+    record: RunRecord,
+    *,
+    provider_name: str = "openrouter",
+    settings: Settings | None = None,
+    store: RunStore | None = None,
+    emit: EmitCb = None,
+) -> RunRecord:
+    """Resume a run from the model fan-out (after a manual approval gate)."""
+    settings = settings or get_settings()
+    store = store or RunStore.from_settings(settings)
+    provider = get_provider(provider_name, settings)
+    try:
+        return await pipeline.resume_after_questions(
+            record,
+            provider,
+            store,
+            emit=emit,
+            report_fn=lambda rec: generate_reports(rec, store),
+        )
+    finally:
+        await provider.aclose()
+
+
 def list_runs(store: RunStore | None = None) -> list[RunSummary]:
     store = store or RunStore.from_settings()
     summaries: list[RunSummary] = []

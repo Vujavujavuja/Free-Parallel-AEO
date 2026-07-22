@@ -19,7 +19,7 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
-from aeo.constants import DEFAULT_CONFIG_FILE, PromptMode
+from aeo.constants import DEFAULT_CONFIG_FILE, PROJECT_ROOT, PromptMode
 
 # Maps flat Settings field names -> (toml_section, toml_key). Anything not listed
 # here (secrets) is env-only.
@@ -153,3 +153,31 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return a process-wide cached Settings instance."""
     return Settings()
+
+
+def _upsert_env_var(name: str, value: str) -> None:
+    """Insert/replace ``name=value`` in the project ``.env`` (created if absent)."""
+    env = PROJECT_ROOT / ".env"
+    lines = env.read_text(encoding="utf-8").splitlines() if env.exists() else []
+    out: list[str] = []
+    found = False
+    for line in lines:
+        if line.strip().startswith(f"{name}="):
+            out.append(f"{name}={value}")
+            found = True
+        else:
+            out.append(line)
+    if not found:
+        out.append(f"{name}={value}")
+    env.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
+def update_openrouter_key(key: str) -> None:
+    """Set the OpenRouter key on the running settings and persist it to .env.
+
+    The key is stored only in the local ``.env`` (gitignored) and the in-memory
+    ``SecretStr`` — never logged, and never returned by the API.
+    """
+    settings = get_settings()
+    settings.openrouter_api_key = SecretStr(key)
+    _upsert_env_var("OPENROUTER_API_KEY", key)

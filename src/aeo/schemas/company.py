@@ -6,6 +6,21 @@ import re
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+MAX_COMPETITORS = 20
+
+
+class SourceDocument(BaseModel):
+    """A user-uploaded document (docx/pdf/md/txt) parsed to text, fed to the
+    orchestrator as extra context."""
+
+    name: str
+    text: str
+
+
+def _domain_of(raw: str) -> str:
+    host = re.sub(r"^https?://", "", raw.strip()).split("/")[0].split("?")[0]
+    return host.split("@")[-1].split(":")[0].lower().strip().rstrip(".,);]").removeprefix("www.")
+
 
 class CompanyProfile(BaseModel):
     """The subject of a scan. Aliases are auto-seeded from name + domain."""
@@ -15,11 +30,14 @@ class CompanyProfile(BaseModel):
     description: str | None = None
     category: str | None = None
     products: list[str] = Field(default_factory=list)
-    competitors: list[str] = Field(default_factory=list)
+    competitors: list[str] = Field(default_factory=list, max_length=MAX_COMPETITORS)
     aliases: list[str] = Field(default_factory=list)
-    icp: str | None = Field(default=None, description="Ideal customer profile / target buyer.")
     regions: list[str] = Field(default_factory=list)
     notes: str | None = None
+    # Sites to track in reference/citation counting (stored as normalized domains).
+    reference_sites: list[str] = Field(default_factory=list)
+    # Uploaded documents (parsed to text) used as orchestrator context.
+    source_documents: list[SourceDocument] = Field(default_factory=list)
 
     @field_validator("website")
     @classmethod
@@ -31,13 +49,33 @@ class CompanyProfile(BaseModel):
             v = f"https://{v}"
         return v
 
+    @field_validator("competitors")
+    @classmethod
+    def _cap_competitors(cls, v: list[str]) -> list[str]:
+        cleaned = [c.strip() for c in v if c.strip()]
+        return cleaned[:MAX_COMPETITORS]
+
+    @field_validator("reference_sites")
+    @classmethod
+    def _normalize_reference_sites(cls, v: list[str]) -> list[str]:
+        out: list[str] = []
+        seen: set[str] = set()
+        for item in v:
+            dom = _domain_of(item)
+            if dom and dom not in seen:
+                seen.add(dom)
+                out.append(dom)
+        return out
+
     @property
     def domain(self) -> str | None:
-        """Bare hostname of the website, lowercased, without ``www.``."""
         if not self.website:
             return None
-        host = re.sub(r"^https?://", "", self.website).split("/")[0].lower()
-        return host.removeprefix("www.") or None
+        return _domain_of(self.website) or None
+
+    @property
+    def reference_domains(self) -> list[str]:
+        return self.reference_sites
 
     @model_validator(mode="after")
     def _seed_aliases(self) -> CompanyProfile:
@@ -46,7 +84,6 @@ class CompanyProfile(BaseModel):
         domain = self.domain
         if domain:
             seeds.append(domain)
-            # e.g. "acme.com" -> "acme"
             root = domain.split(".")[0]
             if root and root != domain:
                 seeds.append(root)

@@ -32,6 +32,8 @@ dependencies = [
   "pyyaml>=6.0",
   "sse-starlette>=2.1",
   "python-multipart>=0.0.9",
+  "python-docx>=1.1",
+  "pypdf>=4.2",
 ]
 
 [project.optional-dependencies]
@@ -82,7 +84,7 @@ warn_unused_ignores = true
 disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["pandas.*", "openpyxl.*", "sse_starlette.*"]
+module = ["pandas.*", "openpyxl.*", "sse_starlette.*", "docx.*", "pypdf.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

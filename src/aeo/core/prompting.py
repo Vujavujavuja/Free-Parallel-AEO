@@ -7,10 +7,11 @@ from functools import lru_cache
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from aeo.constants import PACKAGE_ROOT
-from aeo.schemas.company import CompanyProfile
+from aeo.schemas.company import CompanyProfile, SourceDocument
 from aeo.schemas.question import Question
 
 _PROMPTS_DIR = PACKAGE_ROOT / "core" / "prompts"
+_DOC_CHAR_CAP = 6000  # per-document truncation to keep the orchestrator prompt bounded
 
 DEFAULT_CATEGORIES = [
     "need", "approaches", "differentiation", "evaluation_criteria", "pricing",
@@ -32,11 +33,19 @@ def render_orchestrator(
     company: CompanyProfile,
     question_count: int,
     categories: list[str] | None = None,
+    documents: list[SourceDocument] | None = None,
+    existing_questions: list[str] | None = None,
 ) -> str:
+    docs = [
+        SourceDocument(name=d.name, text=d.text[:_DOC_CHAR_CAP])
+        for d in (documents or [])
+    ]
     return _env().get_template("orchestrator.jinja").render(
         company=company,
         question_count=question_count,
         categories=categories or DEFAULT_CATEGORIES,
+        documents=docs,
+        existing_questions=existing_questions or [],
     )
 
 

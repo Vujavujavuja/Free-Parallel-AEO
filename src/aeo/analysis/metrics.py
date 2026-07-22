@@ -74,7 +74,7 @@ def _analyze_model(
     search_queries = merge_queries(reported_queries, combined)
     num_searches = len(search_queries)
 
-    citations = extract_citations(segments, company.domain)
+    citations = extract_citations(segments, company.domain, company.reference_domains)
     competitor_totals = {c: count_any(combined, [c]) for c in competitors}
     errors = [r.error for r in recs if r.error]
 
@@ -92,6 +92,7 @@ def _analyze_model(
         competitor_totals={k: v for k, v in competitor_totals.items() if v >= 0},
         citations=citations,
         unique_domains=sorted({c.domain for c in citations}),
+        reference_citations=sum(1 for c in citations if c.is_reference),
         answer_length=len(combined),
         provenance=_provenance(brand_mentions, num_searches),
         error="; ".join(errors) if errors else None,
@@ -166,14 +167,17 @@ def _question_aggregates(
 def _domain_frequency(analyses: list[ModelAnalysis]) -> list[DomainStat]:
     by_domain: dict[str, set[str]] = {}
     brand_owned: dict[str, bool] = {}
+    is_reference: dict[str, bool] = {}
     for ma in analyses:
         for c in ma.citations:
             by_domain.setdefault(c.domain, set()).add(ma.model_id)
             brand_owned[c.domain] = brand_owned.get(c.domain, False) or c.brand_owned
+            is_reference[c.domain] = is_reference.get(c.domain, False) or c.is_reference
     stats = [
         DomainStat(
             domain=d, num_models=len(models), models=sorted(models),
             brand_owned=brand_owned.get(d, False),
+            is_reference=is_reference.get(d, False),
         )
         for d, models in by_domain.items()
     ]
@@ -224,6 +228,9 @@ def _insights(
         1 for ma in analyses for c in ma.citations if c.brand_owned
     )
     insights.append(f"Brand-owned citations across all models: {brand_owned_cites}.")
+    ref_cites = sum(ma.reference_citations for ma in analyses)
+    if ref_cites:
+        insights.append(f"Reference-site citations across all models: {ref_cites}.")
     return insights
 
 

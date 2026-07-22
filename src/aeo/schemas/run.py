@@ -25,6 +25,7 @@ def _now() -> datetime:
 class RunOptions(BaseModel):
     orchestrator_model: str
     target_models: list[str]
+    provider: str = "openrouter"  # "openrouter" | "stub"
     question_count: int = 10
     prompt_mode: PromptMode = PromptMode.SINGLE_SHOT
     enable_web_search: bool = False
@@ -33,6 +34,8 @@ class RunOptions(BaseModel):
     cost_cap_usd: float = 5.0
     auto_approve_questions: bool = True
     max_continuations: int = 4
+    # Exact questions supplied by the user; included verbatim in the run.
+    custom_questions: list[str] = Field(default_factory=list)
 
 
 class ModelResponseRecord(BaseModel):

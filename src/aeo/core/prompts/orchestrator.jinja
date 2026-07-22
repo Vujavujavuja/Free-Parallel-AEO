@@ -8,10 +8,20 @@ Category: {{ company.category or "n/a" }}
 Description: {{ company.description or "n/a" }}
 Products: {{ company.products | join(", ") or "n/a" }}
 Known competitors: {{ company.competitors | join(", ") or "n/a" }}
-Target buyer (ICP): {{ company.icp or "n/a" }}
 Regions: {{ company.regions | join(", ") or "n/a" }}
 Notes: {{ company.notes or "n/a" }}
-
+{% if documents %}
+Reference material from uploaded documents (use it to ground the questions):
+{% for doc in documents %}
+--- {{ doc.name }} ---
+{{ doc.text }}
+{% endfor %}
+{% endif %}
+{% if existing_questions %}
+The buyer already has these questions — do NOT duplicate them, generate different ones:
+{% for q in existing_questions %}- {{ q }}
+{% endfor %}
+{% endif %}
 Generate exactly {{ question_count }} questions that a serious buyer would ask,
 spanning these buyer-journey categories: {{ categories | join(", ") }}.
 

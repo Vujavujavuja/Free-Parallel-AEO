@@ -224,3 +224,9 @@ __marimo__/
 # Ship the prebuilt SPA even though "dist/" is ignored generically above.
 !src/aeo/web/dist/
 !src/aeo/web/dist/**
+
+# --- frontend ---
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo

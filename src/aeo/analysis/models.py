@@ -12,6 +12,7 @@ class CitationRecord(BaseModel):
     url: str
     question_index: int | None = None
     brand_owned: bool = False
+    is_reference: bool = False  # matches a user-provided reference site
 
 
 class ModelAnalysis(BaseModel):
@@ -28,6 +29,7 @@ class ModelAnalysis(BaseModel):
     competitor_totals: dict[str, int] = Field(default_factory=dict)
     citations: list[CitationRecord] = Field(default_factory=list)
     unique_domains: list[str] = Field(default_factory=list)
+    reference_citations: int = 0  # citations to user-provided reference sites
     answer_length: int = 0
     provenance: Provenance = Provenance.ABSENT
     error: str | None = None
@@ -48,6 +50,7 @@ class DomainStat(BaseModel):
     num_models: int
     models: list[str]
     brand_owned: bool = False
+    is_reference: bool = False
 
 
 class AnalysisResult(BaseModel):

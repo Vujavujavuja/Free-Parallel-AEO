@@ -10,7 +10,7 @@ from typing import Any
 from aeo.core.prompting import DEFAULT_CATEGORIES, render_orchestrator
 from aeo.exceptions import OrchestratorError
 from aeo.providers.base import ChatMessage, LLMProvider
-from aeo.schemas.company import CompanyProfile
+from aeo.schemas.company import CompanyProfile, SourceDocument
 from aeo.schemas.question import Question, QuestionSet
 
 _ORCHESTRATOR_SCHEMA: dict[str, Any] = {
@@ -52,9 +52,14 @@ async def generate_questions(
     question_count: int = 10,
     max_tokens: int = 4000,
     categories: list[str] | None = None,
+    documents: list[SourceDocument] | None = None,
+    existing_questions: list[str] | None = None,
 ) -> QuestionSet:
     """Call the orchestrator model and parse its structured question set."""
-    prompt = render_orchestrator(company, question_count, categories or DEFAULT_CATEGORIES)
+    prompt = render_orchestrator(
+        company, question_count, categories or DEFAULT_CATEGORIES,
+        documents=documents, existing_questions=existing_questions,
+    )
     result = await provider.chat(
         model,
         [_SYSTEM, ChatMessage(role="user", content=prompt)],

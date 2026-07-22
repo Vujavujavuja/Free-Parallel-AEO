@@ -46,9 +46,12 @@ def _is_brand_owned(domain: str, brand_domain: str | None) -> bool:
 
 
 def extract_citations(
-    segments: dict[int, str], brand_domain: str | None
+    segments: dict[int, str],
+    brand_domain: str | None,
+    reference_domains: list[str] | None = None,
 ) -> list[CitationRecord]:
     """Extract citations across segments, deduped by (question_index, domain)."""
+    refs = set(reference_domains or [])
     citations: list[CitationRecord] = []
     seen: set[tuple[int | None, str]] = set()
     for q_index, text in sorted(segments.items()):
@@ -67,6 +70,9 @@ def extract_citations(
                     url=url,
                     question_index=idx,
                     brand_owned=_is_brand_owned(domain, brand_domain),
+                    is_reference=domain in refs or any(
+                        domain == r or domain.endswith(f".{r}") for r in refs
+                    ),
                 )
             )
     return citations

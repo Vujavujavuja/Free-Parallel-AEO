@@ -55,6 +55,15 @@ def test_dedupe_per_question() -> None:
     assert [c.domain for c in cites] == ["g2.com"]
 
 
+def test_reference_site_flagging() -> None:
+    segs = {1: "See https://g2.com/x and https://acme.com/docs and https://random.io"}
+    cites = extract_citations(segs, brand_domain="acme.com", reference_domains=["g2.com"])
+    flags = {c.domain: c.is_reference for c in cites}
+    assert flags["g2.com"] is True
+    assert flags["acme.com"] is False
+    assert flags["random.io"] is False
+
+
 def test_query_trace_parsing() -> None:
     content = "Searched for: acme reviews\nSome answer\nSearched for best alternatives"
     queries = parse_query_traces(content)
