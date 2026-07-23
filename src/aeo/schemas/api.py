@@ -17,6 +17,7 @@ class RunCreateRequest(BaseModel):
     profile: CompanyProfile
     provider: Literal["openrouter", "stub"] = "openrouter"
     target_models: list[str] | None = None
+    orchestrator_model: str | None = None
     question_count: int | None = None
     prompt_mode: PromptMode | None = None
     enable_web_search: bool | None = None

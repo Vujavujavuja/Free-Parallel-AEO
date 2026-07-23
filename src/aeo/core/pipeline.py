@@ -101,6 +101,14 @@ async def execute_pipeline(
             generated = question_set.questions
             gen_competitors = question_set.competitors
             gen_aliases = question_set.brand_aliases
+            # Fill any profile fields the user left blank from the orchestrator's
+            # inference (name/website/documents). Never overwrites provided values.
+            filled = orchestrator.enrich_company(record.company, question_set.inferred)
+            if filled:
+                await _emit_log(
+                    record, emit,
+                    f"Orchestrator inferred blank fields from name/site: {', '.join(filled)}.",
+                )
 
         custom_qs = [
             Question(index=0, category="custom", text=t, intent="user-provided")

@@ -19,6 +19,7 @@ export default function NewRun() {
   const [hasKey, setHasKey] = useState(false);
   const [catalog, setCatalog] = useState<ModelInfo[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
+  const [orchestratorModel, setOrchestratorModel] = useState("");
   const [modelSearch, setModelSearch] = useState("");
   const [loadingModels, setLoadingModels] = useState(false);
   const [modelsError, setModelsError] = useState<string | null>(null);
@@ -79,6 +80,7 @@ export default function NewRun() {
       setDocuments(c.source_documents ?? []);
       setCustomQuestions((r.options.custom_questions ?? []).join("\n"));
       setSelected(r.options.target_models ?? []);
+      setOrchestratorModel(r.options.orchestrator_model ?? "");
       setQuestionCount(r.options.question_count ?? 10);
       setWebSearch(r.options.enable_web_search ?? false);
       setCostCap(r.options.cost_cap_usd ?? 5);
@@ -195,6 +197,7 @@ export default function NewRun() {
           source_documents: documents,
         },
         target_models: selected.length ? selected : null,
+        orchestrator_model: orchestratorModel.trim() || null,
         question_count: questionCount,
         enable_web_search: webSearch,
         auto_approve_questions: autoApprove,
@@ -283,6 +286,30 @@ export default function NewRun() {
               </button>
             </div>
           )}
+
+          <div className="mb-3">
+            <span className="label">
+              Orchestrator model
+              <span className="text-dim font-normal"> — generates the questions</span>
+            </span>
+            <input
+              className="input"
+              list="orchestrator-models"
+              placeholder={provider === "stub" ? "stub orchestrator" : "default (server setting) — type to search"}
+              value={orchestratorModel}
+              onChange={(e) => setOrchestratorModel(e.target.value)}
+              disabled={provider === "stub"}
+            />
+            <datalist id="orchestrator-models">
+              {catalog.map((m) => (
+                <option key={m.id} value={m.id}>{m.name || m.id}</option>
+              ))}
+            </datalist>
+            <p className="text-xs text-dim mt-1">
+              Leave blank to use the server default. This model only writes the
+              question set — it is not one of the tested models below.
+            </p>
+          </div>
 
           <input
             className="input mb-2"

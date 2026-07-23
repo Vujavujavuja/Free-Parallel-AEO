@@ -42,6 +42,7 @@ export interface RunCreateRequest {
   profile: CompanyProfile;
   provider: Provider;
   target_models?: string[] | null;
+  orchestrator_model?: string | null;
   question_count?: number | null;
   prompt_mode?: PromptMode | null;
   enable_web_search?: boolean | null;
@@ -124,6 +125,7 @@ export interface RunRecord {
   company: CompanyProfile;
   options: {
     target_models: string[];
+    orchestrator_model?: string;
     question_count: number;
     provider: string;
     custom_questions?: string[];

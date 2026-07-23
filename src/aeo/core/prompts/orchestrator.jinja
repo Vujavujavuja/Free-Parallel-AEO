@@ -22,14 +22,25 @@ The buyer already has these questions — do NOT duplicate them, generate differ
 {% for q in existing_questions %}- {{ q }}
 {% endfor %}
 {% endif %}
+Some profile fields may be "n/a". Do not let that stop you: infer the company's
+category and offering from its name, website domain, and any uploaded documents,
+and proceed as if you had a full profile.
+
 Generate exactly {{ question_count }} questions that a serious buyer would ask,
-spanning these buyer-journey categories: {{ categories | join(", ") }}.
+spanning these buyer-journey categories: {{ categories | join(", ") }}. You MUST
+return exactly {{ question_count }} questions — never fewer, never an empty list.
+The questions are neutral market research: they must NOT name {{ company.name }}
+or any specific vendor.
 
 Also propose:
 - competitors: the most likely competing vendors in this category.
 - brand_aliases: alternative names/spellings for {{ company.name }} (including its
   domain and product names) that should count as a mention of this company.
+- inferred: your best inference of the profile fields, to fill any that were
+  "n/a" above. Provide a "category" (short label), a one-sentence "description",
+  a "products" list, and a "regions" list. Base these on the name, website, and
+  documents. If a field was already provided, echo it back unchanged.
 
 Return ONLY JSON matching the provided schema: an object with "questions"
 (each having index, category, text, intent, expected_source_types),
-"competitors", and "brand_aliases".
+"competitors", "brand_aliases", and "inferred".

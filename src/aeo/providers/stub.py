@@ -131,6 +131,12 @@ class StubProvider(LLMProvider):
                 "questions": questions,
                 "competitors": ["Rival One", "Rival Two", "Rival Three"],
                 "brand_aliases": [company, company.split()[0]],
+                "inferred": {
+                    "category": "software",
+                    "description": f"{company} is a software vendor in its category.",
+                    "products": [f"{company.split()[0]} Core"],
+                    "regions": ["North America"],
+                },
             }
         )
 

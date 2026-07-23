@@ -40,6 +40,8 @@ async def create_run(
         )
     options = run_service.options_from_settings(settings, target_models=req.target_models)
     options.provider = req.provider
+    if req.orchestrator_model and req.orchestrator_model.strip():
+        options.orchestrator_model = req.orchestrator_model.strip()
     for field in (
         "question_count", "prompt_mode", "enable_web_search",
         "max_tokens", "concurrency", "cost_cap_usd", "auto_approve_questions",
@@ -58,7 +60,16 @@ async def create_run(
 
     # Validate real model ids against the live catalog; drop invalid, keep valid.
     if req.provider == "openrouter":
-        options.target_models = await _validate_models(options.target_models, settings)
+        catalog = await _catalog(settings)
+        options.target_models = _keep_valid(options.target_models, catalog)
+        if options.orchestrator_model not in catalog:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Orchestrator model {options.orchestrator_model!r} is not on "
+                    "OpenRouter. Pick one from the catalog in the form."
+                ),
+            )
 
     record = run_service.build_run(req.profile, options)
     store = RunStore.from_settings(settings)
@@ -70,13 +81,17 @@ async def create_run(
     return record
 
 
-async def _validate_models(target: list[str], settings: SettingsDep) -> list[str]:
-    """Keep only model ids present in the live OpenRouter catalog."""
+async def _catalog(settings: SettingsDep) -> set[str]:
+    """Fetch the set of valid model ids from the live OpenRouter catalog."""
     provider = get_provider("openrouter", settings)
     try:
-        catalog = {m.id for m in await provider.list_models()}
+        return {m.id for m in await provider.list_models()}
     finally:
         await provider.aclose()
+
+
+def _keep_valid(target: list[str], catalog: set[str]) -> list[str]:
+    """Keep only target model ids present in the catalog; error if none survive."""
     valid = [m for m in target if m in catalog]
     invalid = [m for m in target if m not in catalog]
     if not valid:
