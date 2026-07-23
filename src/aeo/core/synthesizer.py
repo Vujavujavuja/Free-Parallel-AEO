@@ -113,9 +113,12 @@ async def synthesize(
     analysis: AnalysisResult,
     responses: list[ModelResponseRecord],
     *,
-    max_tokens: int = 3000,
+    max_tokens: int | None = None,
 ) -> dict[str, Any] | None:
-    """Return {question_interpretations, findings, quotes} or None on failure."""
+    """Return {question_interpretations, findings, quotes, recommendations} or
+    None on failure. The token budget scales with the question count so the last
+    field (recommendations) isn't starved and truncated on larger runs."""
+    budget = max_tokens or max(4000, len(analysis.questions) * 300 + 3000)
     prompt = (
         f"Analyze this AI brand-visibility run for {company.name} and write insight.\n\n"
         f"{_summary(company, analysis)}\n\n"
@@ -140,7 +143,7 @@ async def synthesize(
         result = await provider.chat(
             model,
             [_SYSTEM, ChatMessage(role="user", content=prompt)],
-            max_tokens=max_tokens,
+            max_tokens=budget,
             temperature=0.4,
             response_schema=_SCHEMA,
         )
@@ -148,6 +151,22 @@ async def synthesize(
     except Exception as exc:  # synthesis is best-effort; never fail the run
         log.warning("synthesis_failed", error=str(exc))
         return None
+
+
+# Values a model emits when it punts or runs low on tokens — never render them.
+_JUNK = frozenset({
+    "placeholder", "string", "n/a", "na", "none", "todo", "tbd", "example",
+    "text", "...", "lorem ipsum", "your recommendation here", "recommendation",
+})
+
+
+def _is_junk(text: str) -> bool:
+    t = text.strip().lower().rstrip(".")
+    return not t or t in _JUNK or len(t) < 4
+
+
+def _clean(items: list[str]) -> list[str]:
+    return [s.strip() for s in items if isinstance(s, str) and not _is_junk(s)]
 
 
 def apply_synthesis(analysis: AnalysisResult, synth: dict[str, Any]) -> None:
@@ -159,18 +178,18 @@ def apply_synthesis(analysis: AnalysisResult, synth: dict[str, Any]) -> None:
     for q in analysis.questions:
         if q.index in interp and interp[q.index].strip():
             q.interpretation = interp[q.index].strip()
-    findings = [f.strip() for f in synth.get("findings", []) if f.strip()]
+    findings = _clean(synth.get("findings", []))
     if findings:
         # Keep the deterministic headline stats, then the AI narrative.
         analysis.insights = analysis.insights[:2] + findings
     quotes = [
         {"model": q.get("model", ""), "quote": q.get("quote", "").strip()}
         for q in synth.get("quotes", [])
-        if q.get("quote", "").strip()
+        if q.get("quote", "").strip().lower().rstrip(".") not in _JUNK
     ]
     if quotes:
         analysis.quotes = quotes
-    recommendations = [r.strip() for r in synth.get("recommendations", []) if r.strip()]
+    recommendations = _clean(synth.get("recommendations", []))
     if recommendations:
         analysis.recommendations = recommendations
 
