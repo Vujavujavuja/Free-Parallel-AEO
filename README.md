@@ -2,7 +2,7 @@
   <img src="assets/parallel-aeo_dots.png" alt="Free-Parallel-AEO" width="400">
 </p>
 
-# Free-Parallel-AEO
+# Parallel-AEO
 
 An open-source, self-hostable AI brand-visibility scanner. You enter a company
 profile, an orchestrator model generates a set of realistic buyer questions, the
