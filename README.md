@@ -4,6 +4,7 @@
 
 # Parallel-AEO
 
+![CI](https://github.com/Vujavujavuja/Parallel-AEO/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/github/license/Vujavujavuja/Parallel-AEO)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Last commit](https://img.shields.io/github/last-commit/Vujavujavuja/Parallel-AEO)
