@@ -227,6 +227,8 @@ async def resume_after_questions(
                 await _emit_log(
                     record, emit, f"AI insights written ({len(result.insights)} findings)."
                 )
+            # Always guarantee an actionable "How to improve" section.
+            synthesizer.ensure_recommendations(record.company, result)
         record.analysis = result.model_dump(mode="json")
         store.save_run(record.model_dump(mode="json"))
 

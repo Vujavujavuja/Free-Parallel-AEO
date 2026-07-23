@@ -3,8 +3,9 @@ when it runs low on tokens (the '1. placeholder' recommendation bug)."""
 
 from __future__ import annotations
 
-from aeo.analysis.models import AnalysisResult, QuestionAggregate
+from aeo.analysis.models import AnalysisResult, DomainStat, ModelAnalysis, QuestionAggregate
 from aeo.core import synthesizer
+from aeo.schemas.company import CompanyProfile
 
 
 def _analysis() -> AnalysisResult:
@@ -48,3 +49,31 @@ def test_junk_findings_and_quotes_filtered() -> None:
     # insights = deterministic first two + cleaned findings
     assert a.insights[2:] == [real_finding]
     assert a.quotes == [{"model": "n", "quote": "Acme is the strongest option here."}]
+
+
+def test_ensure_recommendations_fallback_when_ai_empty() -> None:
+    """If the AI pass returns no recommendations, a deterministic brand-specific
+    set is generated so the 'How to improve' section is never empty."""
+    company = CompanyProfile(name="Acme", website="https://acme.co")
+    a = AnalysisResult(
+        questions=[
+            QuestionAggregate(index=1, text="How do teams pick a vendor?", total_mentions=0),
+            QuestionAggregate(index=2, text="What does pricing look like?", total_mentions=0),
+        ],
+        models=[ModelAnalysis(model_id="m", competitor_totals={"Rival": 9})],
+        domain_frequency=[DomainStat(domain="g2.com", num_models=3, models=["m"])],
+    )
+    assert a.recommendations == []
+    synthesizer.ensure_recommendations(company, a)
+    assert len(a.recommendations) >= 3
+    joined = " ".join(a.recommendations)
+    assert "Rival" in joined            # competitor wedge
+    assert "g2.com" in joined           # third-party citation target
+    assert "acme.co" in joined          # own-domain content
+
+
+def test_ensure_recommendations_keeps_ai_ones() -> None:
+    company = CompanyProfile(name="Acme")
+    a = AnalysisResult(recommendations=["Do the AI-written thing specifically."])
+    synthesizer.ensure_recommendations(company, a)
+    assert a.recommendations == ["Do the AI-written thing specifically."]

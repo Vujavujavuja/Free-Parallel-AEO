@@ -24,10 +24,13 @@ _SCHEMA: dict[str, Any] = {
     "type": "object",
     "required": ["question_interpretations", "findings", "quotes", "recommendations"],
     "additionalProperties": False,
+    # Order matters: the model generates fields top-to-bottom, so recommendations
+    # come LAST — derived after it has reasoned through interpretations/findings.
+    # minItems forces non-empty arrays instead of a lazy empty skeleton.
     "properties": {
-        "recommendations": {"type": "array", "items": {"type": "string"}},
         "question_interpretations": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "type": "object",
                 "required": ["index", "interpretation"],
@@ -38,7 +41,7 @@ _SCHEMA: dict[str, Any] = {
                 },
             },
         },
-        "findings": {"type": "array", "items": {"type": "string"}},
+        "findings": {"type": "array", "minItems": 1, "items": {"type": "string"}},
         "quotes": {
             "type": "array",
             "items": {
@@ -51,6 +54,7 @@ _SCHEMA: dict[str, Any] = {
                 },
             },
         },
+        "recommendations": {"type": "array", "minItems": 1, "items": {"type": "string"}},
     },
 }
 
@@ -139,18 +143,30 @@ async def synthesize(
         "wedges competitors ignore. Each recommendation is one imperative sentence and "
         "names the concrete artifact to create or place."
     )
-    try:
-        result = await provider.chat(
-            model,
-            [_SYSTEM, ChatMessage(role="user", content=prompt)],
-            max_tokens=budget,
-            temperature=0.4,
-            response_schema=_SCHEMA,
+    # Models occasionally return a valid-schema but empty skeleton (all arrays
+    # empty). Retry once with a firmer nudge before giving up on the AI pass.
+    for attempt in range(2):
+        user = prompt if attempt == 0 else (
+            prompt + "\n\nIMPORTANT: your previous reply was empty. You MUST fill "
+            "question_interpretations (one per question), findings, and "
+            "recommendations with real, specific content — do not return empty arrays."
         )
-        return _parse(result.content)
-    except Exception as exc:  # synthesis is best-effort; never fail the run
-        log.warning("synthesis_failed", error=str(exc))
-        return None
+        try:
+            result = await provider.chat(
+                model,
+                [_SYSTEM, ChatMessage(role="user", content=user)],
+                max_tokens=budget,
+                temperature=0.4 if attempt == 0 else 0.6,
+                response_schema=_SCHEMA,
+            )
+            parsed = _parse(result.content)
+        except Exception as exc:  # synthesis is best-effort; never fail the run
+            log.warning("synthesis_failed", error=str(exc), attempt=attempt)
+            parsed = None
+        if parsed and (parsed.get("question_interpretations") or parsed.get("findings")):
+            return parsed
+        log.warning("synthesis_thin", attempt=attempt)
+    return parsed
 
 
 # Values a model emits when it punts or runs low on tokens — never render them.
@@ -192,6 +208,51 @@ def apply_synthesis(analysis: AnalysisResult, synth: dict[str, Any]) -> None:
     recommendations = _clean(synth.get("recommendations", []))
     if recommendations:
         analysis.recommendations = recommendations
+
+
+def ensure_recommendations(company: CompanyProfile, analysis: AnalysisResult) -> None:
+    """Guarantee a useful 'How to improve' section even if the AI pass returned
+    none — build brand-specific actions deterministically from the analysis."""
+    if analysis.recommendations:
+        return
+    recs: list[str] = []
+    zero = [q for q in analysis.questions if q.total_mentions == 0][:3]
+    for q in zero:
+        text = q.text if len(q.text) <= 90 else q.text[:87] + "…"
+        recs.append(
+            f'Publish a page or FAQ that directly answers the buyer question '
+            f'"{text}" so answer engines have {company.name} content to cite.'
+        )
+    brand_owned = any(c.brand_owned for m in analysis.models for c in m.citations)
+    if not brand_owned:
+        dom = company.domain or "your own domain"
+        recs.append(
+            f"Publish crawlable, indexable content on {dom} — no model currently "
+            "cites a brand-owned page, so there is nothing for them to surface."
+        )
+    comp_totals: dict[str, int] = {}
+    for m in analysis.models:
+        for c, v in m.competitor_totals.items():
+            comp_totals[c] = comp_totals.get(c, 0) + v
+    top = max(comp_totals.items(), key=lambda kv: kv[1], default=("", 0))
+    if top[1] > 0:
+        recs.append(
+            f"Contest the category: {top[0]} dominates share of voice — publish "
+            f"comparison and category-education content that frames {company.name}."
+        )
+    third_party = next(
+        (d for d in analysis.domain_frequency if not d.brand_owned), None
+    )
+    if third_party:
+        recs.append(
+            f"Earn a mention or citation on {third_party.domain} and similar sites "
+            "models already cite for this category."
+        )
+    recs.append(
+        "Claim a distinctive positioning wedge competitors ignore and build "
+        "authoritative, linkable content around it."
+    )
+    analysis.recommendations = recs[:6]
 
 
 def _parse(content: str) -> dict[str, Any] | None:
