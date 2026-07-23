@@ -1,25 +1,28 @@
-# Example company profile. Run a free demo with:
+# Example company profile (a generic company). Run a free demo with:
 #   python -m aeo scan --company examples/acme.yaml --stub
-name: Acme Synthetic Data
-website: https://acme.com
-category: Synthetic data platform
+name: Acme Co
+website: https://acme.co
+category: project management software
 description: >
-  Acme generates privacy-safe synthetic data so teams can build and test
-  software without touching real customer records.
+  Acme Co is a work-management platform that helps teams plan, track, and ship
+  projects with boards, docs, and automations.
 products:
-  - Acme SDK
-  - Acme Cloud
+  - Acme Board
+  - Acme Docs
 competitors:
-  - Gretel
-  - Mostly AI
-  - Tonic
+  - Asana
+  - Monday.com
+  - ClickUp
+  - Trello
+  - Notion
+  - Linear
+  - Jira
 aliases:
   - Acme
-  - AcmeData
+reference_sites:
+  - https://g2.com
+  - https://capterra.com
 regions:
   - North America
   - Europe
-reference_sites:
-  - https://g2.com
-  - https://gartner.com
-notes: Strong in regulated industries (healthcare, finance).
+notes: Mid-market and enterprise teams; strong on ease of use.

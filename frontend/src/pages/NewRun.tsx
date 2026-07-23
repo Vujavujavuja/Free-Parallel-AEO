@@ -26,15 +26,15 @@ export default function NewRun() {
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    name: "Acme Synthetic Data",
-    website: "https://acme.com",
-    category: "Synthetic data platform",
-    description: "Privacy-safe synthetic data for building and testing software.",
-    products: "Acme SDK, Acme Cloud",
-    competitors: "Gretel, Mostly AI, Tonic",
+    name: "Acme Co",
+    website: "https://acme.co",
+    category: "project management software",
+    description: "Acme Co is a work-management platform for teams to plan, track, and ship projects.",
+    products: "Acme Board, Acme Docs",
+    competitors: "Asana, Monday.com, ClickUp, Trello, Notion, Linear, Jira",
     aliases: "Acme",
     regions: "North America, Europe",
-    referenceSites: "g2.com, gartner.com",
+    referenceSites: "g2.com, capterra.com",
     notes: "",
   });
   const [customQuestions, setCustomQuestions] = useState("");
@@ -349,7 +349,7 @@ export default function NewRun() {
             One per line. These run verbatim; the orchestrator fills the rest up to the question count.
           </p>
           <textarea className="input font-mono text-sm" rows={4}
-            placeholder={"Is Acme SOC 2 compliant?\nHow does Acme price for startups?"}
+            placeholder={"Is Acme Co SOC 2 compliant?\nHow does Acme Co price for small teams?"}
             value={customQuestions} onChange={(e) => setCustomQuestions(e.target.value)} />
           {linesToArr(customQuestions).length > 0 && (
             <p className="text-xs text-muted mt-1">{linesToArr(customQuestions).length} custom question(s).</p>

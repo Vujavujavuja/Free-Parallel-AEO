@@ -98,10 +98,16 @@ class CompanyProfile(BaseModel):
 
     @property
     def brand_terms(self) -> list[str]:
-        """All strings that count as a brand mention (name + aliases + products)."""
+        """Strings that count as a *brand* mention: the name + curated aliases only.
+
+        Products are deliberately excluded — they are counted separately as
+        sub-brand mentions. Including a long, auto-generated product list (which
+        often contains generic terms like "Differential Privacy") would pollute
+        the brand count with matches that aren't really about the company.
+        """
         terms: list[str] = []
         seen: set[str] = set()
-        for t in [self.name, *self.aliases, *self.products]:
+        for t in [self.name, *self.aliases]:
             key = t.lower().strip()
             if key and key not in seen:
                 seen.add(key)
