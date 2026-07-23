@@ -25,6 +25,7 @@ class RunCreateRequest(BaseModel):
     cost_cap_usd: float | None = None
     auto_approve_questions: bool | None = None
     enable_ai_insights: bool | None = None
+    mention_brand: bool | None = None
     custom_questions: list[str] | None = None
 
 

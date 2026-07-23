@@ -45,6 +45,7 @@ export default function NewRun() {
   const [webSearch, setWebSearch] = useState(false);
   const [autoApprove, setAutoApprove] = useState(true);
   const [aiInsights, setAiInsights] = useState(true);
+  const [mentionBrand, setMentionBrand] = useState(false);
   const [costCap, setCostCap] = useState(5);
   const [keyInput, setKeyInput] = useState("");
   const [savingKey, setSavingKey] = useState(false);
@@ -82,6 +83,7 @@ export default function NewRun() {
       setWebSearch(r.options.enable_web_search ?? false);
       setCostCap(r.options.cost_cap_usd ?? 5);
       setAutoApprove(r.options.auto_approve_questions ?? true);
+      setMentionBrand(r.options.mention_brand ?? false);
       setPreset(c.name);
     });
   }, [fromRun]);
@@ -197,6 +199,7 @@ export default function NewRun() {
         enable_web_search: webSearch,
         auto_approve_questions: autoApprove,
         enable_ai_insights: aiInsights,
+        mention_brand: mentionBrand,
         cost_cap_usd: costCap,
         custom_questions: linesToArr(customQuestions),
       });
@@ -421,9 +424,19 @@ export default function NewRun() {
             <input type="checkbox" checked={autoApprove} onChange={(e) => setAutoApprove(e.target.checked)} />
             Auto-approve questions
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm mb-2">
             <input type="checkbox" checked={aiInsights} onChange={(e) => setAiInsights(e.target.checked)} />
             AI insights &amp; quotes
+          </label>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-1" checked={mentionBrand} onChange={(e) => setMentionBrand(e.target.checked)} />
+            <span>
+              Mention brand in prompt
+              <span className="block text-xs text-dim">
+                Adds only a neutral test title “AI Visibility Test — {form.name || "Brand"}”.
+                Off = fully organic; on = comparable to a named-title manual run.
+              </span>
+            </span>
           </label>
         </div>
 

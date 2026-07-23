@@ -43,7 +43,7 @@ async def create_run(
     for field in (
         "question_count", "prompt_mode", "enable_web_search",
         "max_tokens", "concurrency", "cost_cap_usd", "auto_approve_questions",
-        "enable_ai_insights",
+        "enable_ai_insights", "mention_brand",
     ):
         value = getattr(req, field)
         if value is not None:

@@ -182,9 +182,10 @@ async def resume_after_questions(
         if isinstance(provider, StubProvider):
             provider.configure(record.company.brand_terms, record.competitors)
 
+        brand = record.company.name if record.options.mention_brand else None
         record.responses = await runner.run_models(
             provider, record.questions, record.options,
-            on_progress=on_progress, log_cb=on_log,
+            on_progress=on_progress, log_cb=on_log, brand=brand,
         )
         record.total_cost_usd = round(sum(r.cost_usd for r in record.responses), 6)
         failed = sum(1 for r in record.responses if r.error)

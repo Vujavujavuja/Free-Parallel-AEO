@@ -48,6 +48,7 @@ export interface RunCreateRequest {
   cost_cap_usd?: number | null;
   auto_approve_questions?: boolean | null;
   enable_ai_insights?: boolean | null;
+  mention_brand?: boolean | null;
   custom_questions?: string[] | null;
 }
 
@@ -129,6 +130,7 @@ export interface RunRecord {
     enable_web_search?: boolean;
     cost_cap_usd?: number;
     auto_approve_questions?: boolean;
+    mention_brand?: boolean;
   };
   questions: Question[];
   competitors: string[];

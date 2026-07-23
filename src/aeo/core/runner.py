@@ -69,6 +69,7 @@ async def run_models(
     options: RunOptions,
     on_progress: ProgressCb = None,
     log_cb: LogCb = None,
+    brand: str | None = None,
 ) -> list[ModelResponseRecord]:
     """Execute the fan-out and return one record per (model[, question])."""
     semaphore = asyncio.Semaphore(max(1, options.concurrency))
@@ -88,7 +89,7 @@ async def run_models(
     async def worker(model: str, qs: list[Question]) -> ModelResponseRecord:
         nonlocal done
         async with semaphore:
-            record = await _run_unit(provider, qs, model, options, governor)
+            record = await _run_unit(provider, qs, model, options, governor, brand)
         async with done_lock:
             done += 1
             current = done
@@ -114,6 +115,7 @@ async def _run_unit(
     model: str,
     options: RunOptions,
     governor: _CostGovernor,
+    brand: str | None = None,
 ) -> ModelResponseRecord:
     q_index = questions[0].index if options.prompt_mode == PromptMode.PER_QUESTION else None
     record = ModelResponseRecord(model_id=model, question_index=q_index)
@@ -122,7 +124,7 @@ async def _run_unit(
         record.error = "cost_cap_reached"
         return record
 
-    prompt = render_answer(questions, options.enable_web_search)
+    prompt = render_answer(questions, options.enable_web_search, brand)
     messages = [_ANSWER_SYSTEM, ChatMessage(role="user", content=prompt)]
     try:
         await _chat_with_continue(provider, model, messages, options, record)

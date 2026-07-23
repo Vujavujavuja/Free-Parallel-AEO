@@ -49,11 +49,18 @@ def render_orchestrator(
     )
 
 
-def render_answer(questions: list[Question], enable_web_search: bool = False) -> str:
-    """Render the NEUTRAL answer prompt. It contains only the questions and
-    neutral instructions — no company or competitor names — so brand mentions
-    measured downstream are genuinely organic."""
+def render_answer(
+    questions: list[Question],
+    enable_web_search: bool = False,
+    brand: str | None = None,
+) -> str:
+    """Render the answer prompt. It contains only the questions and neutral
+    instructions. If ``brand`` is given (the 'mention brand' option), the ONLY
+    brand reference added is a neutral test title '## AI Visibility Test —
+    {brand}' — no competitors, no 'company under evaluation'. Otherwise the
+    prompt is fully neutral and brand mentions measured downstream are organic."""
     return _env().get_template("answer.jinja").render(
         questions=questions,
         enable_web_search=enable_web_search,
+        brand=brand,
     )

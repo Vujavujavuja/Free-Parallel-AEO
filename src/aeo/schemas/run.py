@@ -35,6 +35,9 @@ class RunOptions(BaseModel):
     auto_approve_questions: bool = True
     max_continuations: int = 4
     enable_ai_insights: bool = True  # LLM synthesis pass for interpretations/quotes
+    # If true, the ONLY brand reference in the answer prompt is a neutral test
+    # title "## AI Visibility Test — {brand}" (matches the manual methodology).
+    mention_brand: bool = False
     # Exact questions supplied by the user; included verbatim in the run.
     custom_questions: list[str] = Field(default_factory=list)
 
