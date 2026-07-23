@@ -9,6 +9,8 @@ Instructions:
 - Treat each question as a standalone query and provide a full, detailed answer.
 - For each answer, note any websites or sources you cite as a reference.
 - For each answer, note any websites or sources you mention by name.
+{% if language and language != "English" %}- Write every answer in {{ language }}.
+{% endif %}
 {% if enable_web_search %}- If you search the web, list every search query you run under "Searches performed" at the end.
 {% endif %}
 {% if brand %}

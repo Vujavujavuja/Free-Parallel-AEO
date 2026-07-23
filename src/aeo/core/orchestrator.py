@@ -74,6 +74,7 @@ async def generate_questions(
     categories: list[str] | None = None,
     documents: list[SourceDocument] | None = None,
     existing_questions: list[str] | None = None,
+    language: str = "English",
 ) -> QuestionSet:
     """Call the orchestrator model and parse its structured question set. Always
     returns at least ``question_count`` questions (falling back to a neutral
@@ -87,7 +88,7 @@ async def generate_questions(
     qset = await _generate_once(
         provider, company, model=model, question_count=question_count,
         max_tokens=budget, categories=cats,
-        documents=documents, existing_questions=existing,
+        documents=documents, existing_questions=existing, language=language,
     )
 
     # If the model under-delivered, retry once for just the shortfall, using the
@@ -99,7 +100,7 @@ async def generate_questions(
             more = await _generate_once(
                 provider, company, model=model, question_count=shortfall,
                 max_tokens=budget, categories=cats,
-                documents=documents, existing_questions=have,
+                documents=documents, existing_questions=have, language=language,
             )
             qset.questions.extend(more.questions)
             qset.competitors = _dedup(qset.competitors + more.competitors)
@@ -140,11 +141,13 @@ async def _generate_once(
     categories: list[str],
     documents: list[SourceDocument] | None,
     existing_questions: list[str],
+    language: str = "English",
 ) -> QuestionSet:
     """One orchestrator call → parsed, validated question set (may be short)."""
     prompt = render_orchestrator(
         company, question_count, categories,
         documents=documents, existing_questions=existing_questions,
+        language=language,
     )
     result = await provider.chat(
         model,

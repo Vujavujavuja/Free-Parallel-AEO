@@ -8,6 +8,32 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 MAX_COMPETITORS = 20
 
+# Common words that describe the *category*, not a specific brand. A multi-word
+# alias made up entirely of these (e.g. "Free Security", "Cyber Solutions") is too
+# generic to count as a brand mention — it would match the plain English phrase in
+# any answer (this is what inflated the "TheFreeSecurity" run on questions that
+# literally contained the words "free security"). Such aliases are dropped from
+# the mention-matching term set; the distinctive primary name is always kept.
+_GENERIC_WORDS = frozenset({
+    "the", "a", "an", "of", "for", "and", "your", "our",
+    "free", "security", "secure", "cyber", "cybersecurity", "cybersec",
+    "data", "cloud", "ai", "ml", "digital", "online", "web", "net",
+    "testing", "test", "pentest", "pentesting", "audit", "audits",
+    "service", "services", "software", "platform", "platforms",
+    "solution", "solutions", "tool", "tools", "app", "apps", "suite",
+    "tech", "technology", "technologies", "systems", "system",
+    "protection", "safety", "privacy", "compliance", "consulting",
+    "consultancy", "company", "group", "labs", "lab", "studio",
+    "inc", "llc", "ltd", "co", "corp", "io", "org", "com",
+})
+
+
+def _is_generic_phrase(term: str) -> bool:
+    """True if the term is 2+ words that are all generic (so it would match the
+    plain category phrase). Single distinctive tokens and domains are kept."""
+    tokens = re.findall(r"[a-z0-9]+", term.lower())
+    return len(tokens) >= 2 and all(t in _GENERIC_WORDS for t in tokens)
+
 
 class SourceDocument(BaseModel):
     """A user-uploaded document (docx/pdf/md/txt) parsed to text, fed to the
@@ -107,9 +133,14 @@ class CompanyProfile(BaseModel):
         """
         terms: list[str] = []
         seen: set[str] = set()
-        for t in [self.name, *self.aliases]:
+        for i, t in enumerate([self.name, *self.aliases]):
             key = t.lower().strip()
-            if key and key not in seen:
-                seen.add(key)
-                terms.append(t)
+            if not key or key in seen:
+                continue
+            # Always keep the primary name (i == 0); drop generic-only aliases so
+            # a plain phrase like "free security" isn't miscounted as the brand.
+            if i > 0 and _is_generic_phrase(t):
+                continue
+            seen.add(key)
+            terms.append(t)
         return terms

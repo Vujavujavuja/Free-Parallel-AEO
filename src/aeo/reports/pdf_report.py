@@ -388,6 +388,17 @@ def write_pdf(record: RunRecord, path: Path) -> Path:
             S.append(Paragraph(f"<font color='{T.EMBER}'>&#9642;</font> {_esc(ins)}", st["body"]))
         S.append(Spacer(1, 0.3 * cm))
 
+    # How to improve — AI-written, brand-specific action plan
+    if a.recommendations:
+        S.append(Paragraph("How to improve your AI visibility", st["h2"]))
+        S.append(Paragraph(
+            f"Concrete steps to raise how AI models represent {_esc(record.company.name)}, "
+            "based on the gaps found in this run.", st["cap"]))
+        for i, rec in enumerate(a.recommendations, 1):
+            S.append(Paragraph(
+                f"<font name='{MONO_B}' color='{T.WINE}'>{i}.</font> {_esc(rec)}", st["body"]))
+        S.append(Spacer(1, 0.3 * cm))
+
     # Domains
     if a.domain_frequency:
         S.append(Paragraph("Where models get their information", st["h2"]))

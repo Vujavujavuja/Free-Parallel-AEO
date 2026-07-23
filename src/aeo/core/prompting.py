@@ -35,6 +35,7 @@ def render_orchestrator(
     categories: list[str] | None = None,
     documents: list[SourceDocument] | None = None,
     existing_questions: list[str] | None = None,
+    language: str = "English",
 ) -> str:
     docs = [
         SourceDocument(name=d.name, text=d.text[:_DOC_CHAR_CAP])
@@ -46,6 +47,7 @@ def render_orchestrator(
         categories=categories or DEFAULT_CATEGORIES,
         documents=docs,
         existing_questions=existing_questions or [],
+        language=language or "English",
     )
 
 
@@ -53,6 +55,7 @@ def render_answer(
     questions: list[Question],
     enable_web_search: bool = False,
     brand: str | None = None,
+    language: str = "English",
 ) -> str:
     """Render the answer prompt. It contains only the questions and neutral
     instructions. If ``brand`` is given (the 'mention brand' option), the ONLY
@@ -63,4 +66,5 @@ def render_answer(
         questions=questions,
         enable_web_search=enable_web_search,
         brand=brand,
+        language=language or "English",
     )

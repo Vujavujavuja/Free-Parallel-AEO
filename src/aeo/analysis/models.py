@@ -87,6 +87,8 @@ class AnalysisResult(BaseModel):
     url_frequency: list[UrlStat] = Field(default_factory=list)
     insights: list[str] = Field(default_factory=list)
     quotes: list[dict[str, str]] = Field(default_factory=list)
+    # AI-written, brand-specific actions to improve visibility (synthesis pass).
+    recommendations: list[str] = Field(default_factory=list)
 
     def ranked_models(self) -> list[ModelAnalysis]:
         """Models ranked by brand visibility (mentions, then questions covered)."""

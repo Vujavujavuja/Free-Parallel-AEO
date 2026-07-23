@@ -108,3 +108,24 @@ def test_enrich_company_only_fills_blanks() -> None:
 def test_enrich_company_handles_none() -> None:
     company = CompanyProfile(name="Acme")
     assert orchestrator.enrich_company(company, None) == []
+
+
+def test_generic_aliases_dropped_from_brand_terms() -> None:
+    """A generic-phrase alias like 'Free Security' must not be a match term,
+    else it counts the plain English phrase (the Q9 false-positive bug)."""
+    company = CompanyProfile(
+        name="TheFreeSecurity",
+        aliases=["The Free Security", "Free Security", "TheFreeSec"],
+    )
+    terms = [t.lower() for t in company.brand_terms]
+    assert "thefreesecurity" in terms          # distinctive primary name kept
+    assert "thefreesec" in terms               # distinctive alias kept
+    assert "free security" not in terms        # generic phrase dropped
+    assert "the free security" not in terms    # generic phrase dropped
+
+
+def test_distinctive_multiword_alias_kept() -> None:
+    company = CompanyProfile(name="Acme", aliases=["Acme Security", "Acme Cloud"])
+    terms = [t.lower() for t in company.brand_terms]
+    assert "acme security" in terms  # has a non-generic word -> kept
+    assert "acme cloud" in terms

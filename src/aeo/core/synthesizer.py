@@ -22,9 +22,10 @@ log = get_logger(__name__)
 
 _SCHEMA: dict[str, Any] = {
     "type": "object",
-    "required": ["question_interpretations", "findings", "quotes"],
+    "required": ["question_interpretations", "findings", "quotes", "recommendations"],
     "additionalProperties": False,
     "properties": {
+        "recommendations": {"type": "array", "items": {"type": "string"}},
         "question_interpretations": {
             "type": "array",
             "items": {
@@ -86,6 +87,14 @@ def _summary(company: CompanyProfile, analysis: AnalysisResult) -> str:
         for d in analysis.domain_frequency[:10]
     ]
     lines.append("Top cited domains (models citing, *=brand-owned): " + ", ".join(top_domains))
+    zero = [q for q in analysis.questions if q.total_mentions == 0]
+    if zero:
+        lines.append(
+            "Questions with ZERO brand mentions (biggest content gaps): "
+            + "; ".join(f"Q{q.index} \"{q.text}\"" for q in zero)
+        )
+    brand_owned = sum(1 for m in analysis.models for c in m.citations if c.brand_owned)
+    lines.append(f"Brand-owned domains cited by models: {brand_owned}.")
     return "\n".join(lines)
 
 
@@ -116,7 +125,16 @@ async def synthesize(
         "read of how the brand fared and why (positioning, framing, gaps).\n"
         "- findings: 5-8 sharp, specific narrative findings a marketer would act on.\n"
         "- quotes: 3-6 short verbatim pull-quotes from the excerpts that best illustrate "
-        "how models describe the brand (attribute each to its model)."
+        "how models describe the brand (attribute each to its model).\n"
+        "- recommendations: 5-8 concrete, tactical actions THIS company should take to "
+        f"improve how AI models represent {company.name}, grounded in the specific gaps "
+        "above. Be specific, not generic. Favor answer-engine-optimization moves such as: "
+        "publishing content that directly answers the zero-mention questions (e.g. a blog "
+        "post or FAQ titled as that exact buyer question), earning citations on the "
+        "authoritative third-party sites the models already cite, publishing crawlable, "
+        "indexable content on the brand's own domain, and claiming distinctive positioning "
+        "wedges competitors ignore. Each recommendation is one imperative sentence and "
+        "names the concrete artifact to create or place."
     )
     try:
         result = await provider.chat(
@@ -152,6 +170,9 @@ def apply_synthesis(analysis: AnalysisResult, synth: dict[str, Any]) -> None:
     ]
     if quotes:
         analysis.quotes = quotes
+    recommendations = [r.strip() for r in synth.get("recommendations", []) if r.strip()]
+    if recommendations:
+        analysis.recommendations = recommendations
 
 
 def _parse(content: str) -> dict[str, Any] | None:

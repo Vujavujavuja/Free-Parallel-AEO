@@ -165,8 +165,22 @@ class StubProvider(LLMProvider):
             {"model": m, "quote": f"{brand} is a strong option for teams evaluating this category."}
             for m in _STUB_PANEL[:3]
         ]
+        recommendations = [
+            f"Publish a blog post or FAQ titled as each zero-mention buyer question so {brand} "
+            "is the answer models find.",
+            "Earn citations on the third-party review sites models already cite for this category.",
+            f"Publish crawlable, indexable content on the {brand} domain so models can read and "
+            "cite it.",
+            "Claim a distinctive positioning wedge competitors ignore and build content around it.",
+            "Add customer proof and outcome data to bottom-funnel pages prospects research.",
+        ]
         return json.dumps(
-            {"question_interpretations": qi, "findings": findings, "quotes": quotes}
+            {
+                "question_interpretations": qi,
+                "findings": findings,
+                "quotes": quotes,
+                "recommendations": recommendations,
+            }
         )
 
     def _answer(self, model: str, prompt: str, *, searched: bool) -> str:

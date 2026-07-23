@@ -42,6 +42,8 @@ async def create_run(
     options.provider = req.provider
     if req.orchestrator_model and req.orchestrator_model.strip():
         options.orchestrator_model = req.orchestrator_model.strip()
+    if req.language and req.language.strip():
+        options.language = req.language.strip()
     for field in (
         "question_count", "prompt_mode", "enable_web_search",
         "max_tokens", "concurrency", "cost_cap_usd", "auto_approve_questions",

@@ -97,6 +97,7 @@ async def execute_pipeline(
                 question_count=needed,
                 documents=record.company.source_documents,
                 existing_questions=custom,
+                language=record.options.language,
             )
             generated = question_set.questions
             gen_competitors = question_set.competitors

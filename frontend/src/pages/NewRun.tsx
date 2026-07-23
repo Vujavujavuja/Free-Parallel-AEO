@@ -43,6 +43,7 @@ export default function NewRun() {
   const [uploading, setUploading] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const [questionCount, setQuestionCount] = useState(10);
+  const [language, setLanguage] = useState("English");
   const [webSearch, setWebSearch] = useState(false);
   const [autoApprove, setAutoApprove] = useState(true);
   const [aiInsights, setAiInsights] = useState(true);
@@ -81,6 +82,7 @@ export default function NewRun() {
       setCustomQuestions((r.options.custom_questions ?? []).join("\n"));
       setSelected(r.options.target_models ?? []);
       setOrchestratorModel(r.options.orchestrator_model ?? "");
+      setLanguage(r.options.language ?? "English");
       setQuestionCount(r.options.question_count ?? 10);
       setWebSearch(r.options.enable_web_search ?? false);
       setCostCap(r.options.cost_cap_usd ?? 5);
@@ -198,6 +200,7 @@ export default function NewRun() {
         },
         target_models: selected.length ? selected : null,
         orchestrator_model: orchestratorModel.trim() || null,
+        language: language.trim() || null,
         question_count: questionCount,
         enable_web_search: webSearch,
         auto_approve_questions: autoApprove,
@@ -438,6 +441,22 @@ export default function NewRun() {
           <Field label="Question count">
             <input type="number" className="input" min={1} max={50} value={questionCount}
               onChange={(e) => setQuestionCount(Math.max(1, Math.min(50, Number(e.target.value))))} />
+          </Field>
+          <Field label="Language">
+            <input className="input" list="languages" value={language}
+              placeholder="English"
+              onChange={(e) => setLanguage(e.target.value)} />
+            <datalist id="languages">
+              {["English", "Serbian", "Croatian", "Bosnian", "German", "French",
+                "Spanish", "Italian", "Portuguese", "Dutch", "Polish", "Turkish",
+                "Arabic", "Japanese", "Korean", "Chinese"].map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </datalist>
+            <p className="text-xs text-dim mt-1">
+              Questions are generated and answered in this language. Brand and
+              competitor matching still works regardless of language.
+            </p>
           </Field>
           <Field label="Cost cap (USD)">
             <input type="number" className="input" min={0} step={0.5} value={costCap}

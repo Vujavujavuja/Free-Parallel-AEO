@@ -124,7 +124,7 @@ async def _run_unit(
         record.error = "cost_cap_reached"
         return record
 
-    prompt = render_answer(questions, options.enable_web_search, brand)
+    prompt = render_answer(questions, options.enable_web_search, brand, options.language)
     messages = [_ANSWER_SYSTEM, ChatMessage(role="user", content=prompt)]
     try:
         await _chat_with_continue(provider, model, messages, options, record)

@@ -69,6 +69,20 @@ export default function Dashboard({ run }: { run: RunRecord }) {
         </Section>
       )}
 
+      {/* How to improve — AI-written action plan */}
+      {a.recommendations?.length > 0 && (
+        <Section title="How to improve your AI visibility">
+          <ol className="space-y-2 text-sm">
+            {a.recommendations.map((t, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="font-mono text-wine">{i + 1}.</span>
+                <span>{t}</span>
+              </li>
+            ))}
+          </ol>
+        </Section>
+      )}
+
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Provenance */}
         <Section title="Provenance">

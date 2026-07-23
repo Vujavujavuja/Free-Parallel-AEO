@@ -26,6 +26,8 @@ class RunOptions(BaseModel):
     orchestrator_model: str
     target_models: list[str]
     provider: str = "openrouter"  # "openrouter" | "stub"
+    # Language the generated questions and model answers should be written in.
+    language: str = "English"
     question_count: int = 10
     prompt_mode: PromptMode = PromptMode.SINGLE_SHOT
     enable_web_search: bool = False
