@@ -11,7 +11,6 @@ from aeo.constants import PromptMode
 from aeo.core.prompting import render_answer
 from aeo.logging import get_logger
 from aeo.providers.base import ChatMessage, ChatResult, LLMProvider
-from aeo.schemas.company import CompanyProfile
 from aeo.schemas.question import Question
 from aeo.schemas.run import ModelResponseRecord, RunOptions
 
@@ -51,9 +50,7 @@ class _CostGovernor:
 
 async def run_models(
     provider: LLMProvider,
-    company: CompanyProfile,
     questions: list[Question],
-    competitors: list[str],
     options: RunOptions,
     on_progress: ProgressCb = None,
 ) -> list[ModelResponseRecord]:
@@ -75,7 +72,7 @@ async def run_models(
     async def worker(model: str, qs: list[Question]) -> ModelResponseRecord:
         nonlocal done
         async with semaphore:
-            record = await _run_unit(provider, company, competitors, qs, model, options, governor)
+            record = await _run_unit(provider, qs, model, options, governor)
         async with done_lock:
             done += 1
             current = done
@@ -95,8 +92,6 @@ async def run_models(
 
 async def _run_unit(
     provider: LLMProvider,
-    company: CompanyProfile,
-    competitors: list[str],
     questions: list[Question],
     model: str,
     options: RunOptions,
@@ -109,7 +104,7 @@ async def _run_unit(
         record.error = "cost_cap_reached"
         return record
 
-    prompt = render_answer(company, competitors, questions)
+    prompt = render_answer(questions, options.enable_web_search)
     messages = [_ANSWER_SYSTEM, ChatMessage(role="user", content=prompt)]
     try:
         await _chat_with_continue(provider, model, messages, options, record)
@@ -132,6 +127,7 @@ async def _chat_with_continue(
     """Call the model, auto-continuing on truncation up to max_continuations."""
     contents: list[str] = []
     queries: set[str] = set()
+    citations: list[str] = []
     continuations = 0
 
     while True:
@@ -148,6 +144,7 @@ async def _chat_with_continue(
         record.latency_ms += result.latency_ms
         record.web_search_used = record.web_search_used or result.web_search_used
         queries.update(result.search_queries)
+        citations.extend(result.search_citations)
         record.finish_reason = result.finish_reason
 
         if result.finish_reason != "length" or continuations >= options.max_continuations:
@@ -161,4 +158,5 @@ async def _chat_with_continue(
 
     record.content = "".join(contents)
     record.search_queries = sorted(queries)
+    record.search_citations = list(dict.fromkeys(citations))
     record.continuations = continuations

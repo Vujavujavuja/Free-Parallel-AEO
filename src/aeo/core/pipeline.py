@@ -20,6 +20,7 @@ from aeo.constants import RunStatus
 from aeo.core import orchestrator, runner
 from aeo.logging import get_logger
 from aeo.providers.base import LLMProvider
+from aeo.providers.stub import StubProvider
 from aeo.schemas.question import Question
 from aeo.schemas.run import RunRecord
 from aeo.storage import RunStore
@@ -146,9 +147,13 @@ async def resume_after_questions(
                     )
                 )
 
+        # The neutral prompt carries no brand/competitor info, so give the stub
+        # provider that context out-of-band for realistic offline demos.
+        if isinstance(provider, StubProvider):
+            provider.configure(record.company.brand_terms, record.competitors)
+
         record.responses = await runner.run_models(
-            provider, record.company, record.questions, record.competitors,
-            record.options, on_progress=on_progress,
+            provider, record.questions, record.options, on_progress=on_progress,
         )
         record.total_cost_usd = round(sum(r.cost_usd for r in record.responses), 6)
         store.save_run(record.model_dump(mode="json"))

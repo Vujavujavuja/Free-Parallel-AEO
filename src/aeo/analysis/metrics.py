@@ -5,16 +5,18 @@ from __future__ import annotations
 
 import re
 
-from aeo.analysis.citations import extract_citations
+from aeo.analysis.citations import domain_of, extract_citations
 from aeo.analysis.mentions import count_any, in_vendor_table
 from aeo.analysis.models import (
     AnalysisResult,
+    CitationRecord,
     DomainStat,
     ModelAnalysis,
     QuestionAggregate,
 )
 from aeo.analysis.queries import merge_queries
 from aeo.analysis.segmenter import segment
+from aeo.analysis.selfreport import parse_self_report
 from aeo.constants import Provenance
 from aeo.schemas.company import CompanyProfile
 from aeo.schemas.question import Question
@@ -23,12 +25,36 @@ from aeo.schemas.run import ModelResponseRecord, RunRecord
 _SENTENCE_RE = re.compile(r"[^.!?\n]*[.!?]")
 
 
-def _provenance(brand_mentions: int, num_searches: int) -> Provenance:
-    if brand_mentions > 0 and num_searches == 0:
-        return Provenance.ORGANIC
-    if brand_mentions > 0 and num_searches > 0:
-        return Provenance.SEARCH_DRIVEN
-    return Provenance.ABSENT
+def _provenance(brand_mentions: int, searched: bool) -> Provenance:
+    if brand_mentions <= 0:
+        return Provenance.ABSENT
+    return Provenance.SEARCH_DRIVEN if searched else Provenance.ORGANIC
+
+
+def _search_citations(
+    urls: list[str],
+    existing: list[CitationRecord],
+    brand_domain: str | None,
+    reference_domains: list[str],
+) -> list[CitationRecord]:
+    """Turn web-search annotation URLs into citation records (deduped by domain)."""
+    refs = set(reference_domains)
+    seen = {c.domain for c in existing}
+    out: list[CitationRecord] = []
+    for url in urls:
+        domain = domain_of(url)
+        if not domain or domain in seen:
+            continue
+        seen.add(domain)
+        out.append(
+            CitationRecord(
+                domain=domain, url=url, question_index=None,
+                brand_owned=bool(brand_domain) and domain == brand_domain,
+                is_reference=domain in refs,
+                is_search=True,
+            )
+        )
+    return out
 
 
 def _segments_for(model: str, recs: list[ModelResponseRecord]) -> dict[int, str]:
@@ -61,20 +87,25 @@ def _analyze_model(
         seg = segments.get(q.index, "")
         per_question_brand[q.index] = count_any(seg, brand_terms) if seg else 0
 
+    # Count only within per-question answer bodies. The preamble bucket (index 0)
+    # holds the instructions echo / Results Table summary, which would double-count.
     brand_mentions = sum(per_question_brand.values())
-    # Also count mentions that landed in the preamble bucket (index 0).
-    if 0 in segments:
-        brand_mentions += count_any(segments[0], brand_terms)
 
     reported_queries: list[str] = []
+    search_citation_urls: list[str] = []
     web_search_used = False
     for r in recs:
         reported_queries.extend(r.search_queries)
+        search_citation_urls.extend(r.search_citations)
         web_search_used = web_search_used or r.web_search_used
     search_queries = merge_queries(reported_queries, combined)
     num_searches = len(search_queries)
 
     citations = extract_citations(segments, company.domain, company.reference_domains)
+    citations += _search_citations(
+        search_citation_urls, citations, company.domain, company.reference_domains
+    )
+    self_reported = parse_self_report(combined, segments)
     competitor_totals = {c: count_any(combined, [c]) for c in competitors}
     errors = [r.error for r in recs if r.error]
 
@@ -92,9 +123,10 @@ def _analyze_model(
         competitor_totals={k: v for k, v in competitor_totals.items() if v >= 0},
         citations=citations,
         unique_domains=sorted({c.domain for c in citations}),
+        self_reported=self_reported,
         reference_citations=sum(1 for c in citations if c.is_reference),
         answer_length=len(combined),
-        provenance=_provenance(brand_mentions, num_searches),
+        provenance=_provenance(brand_mentions, num_searches > 0 or web_search_used),
         error="; ".join(errors) if errors else None,
     )
 

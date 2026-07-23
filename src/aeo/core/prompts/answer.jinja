@@ -1,19 +1,26 @@
-You are a knowledgeable AI assistant helping a buyer research a software
-category. Answer each question fully, factually, and neutrally, as you normally
-would for a user — recommend the vendors you genuinely think fit.
+IMPORTANT: Answer each question fresh, based solely on your training data and
+knowledge. Do not let any prior interaction influence your responses.
 
-Company under evaluation: {{ company.name }}
-Website: {{ company.domain or "n/a" }}
-Category: {{ company.category or "n/a" }}
-Competitors to consider: {{ competitors | join(", ") or "n/a" }}
+I am testing which websites and sources appear in AI-generated responses for a
+series of B2B-related questions. Treat each question independently and with the
+same depth and detail as if it were the only question being asked.
 
-Formatting rules:
-- Begin each answer with a header line "Q{n}." (matching the question number).
-- Where you rely on a website, cite it inline or on a "Source:" line.
-- After all answers, add two sections:
-  "Cited sources:" — the websites you cited (one URL per line).
-  "Named vendors:" — the companies you named (one per line).
-
-Questions:
-{% for q in questions %}Q{{ q.index }}. {{ q.text }}
+Instructions:
+- Treat each question as a standalone query and provide a full, detailed answer.
+- For each answer, note any websites or sources you cite as a reference.
+- For each answer, note any websites or sources you mention by name.
+{% if enable_web_search %}- If you search the web, list every search query you run under "Searches performed" at the end.
+{% endif %}
+## Results Table
+| # | Question Summary | Websites Cited | Websites Mentioned |
+|---|---|---|---|
+{% for q in questions %}| {{ q.index }} |  |  |  |
 {% endfor %}
+{% for q in questions %}
+## Q{{ q.index }}. {{ q.text }}
+[Provide a full answer]
+{% endfor %}
+{% if enable_web_search %}
+## Searches performed
+[List each web search query you ran, one per line]
+{% endif %}

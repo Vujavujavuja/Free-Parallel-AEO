@@ -49,13 +49,11 @@ def render_orchestrator(
     )
 
 
-def render_answer(
-    company: CompanyProfile,
-    competitors: list[str],
-    questions: list[Question],
-) -> str:
+def render_answer(questions: list[Question], enable_web_search: bool = False) -> str:
+    """Render the NEUTRAL answer prompt. It contains only the questions and
+    neutral instructions — no company or competitor names — so brand mentions
+    measured downstream are genuinely organic."""
     return _env().get_template("answer.jinja").render(
-        company=company,
-        competitors=competitors,
         questions=questions,
+        enable_web_search=enable_web_search,
     )

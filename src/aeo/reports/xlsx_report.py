@@ -192,24 +192,34 @@ def _question_aggregate_sheet(
 
 def _sources_sheet(wb: Workbook, analysis: AnalysisResult) -> None:
     ws = wb.create_sheet("Sources by Model & Q")
-    _header(ws, ["Model", "Question/Section", "Cited Domains", "Example URL"])
+    _header(ws, [
+        "Model", "Question", "Hyperlinked Cite Domains",
+        "Self-reported cited", "Self-reported named", "Example URL",
+    ])
     row = 2
     for ma in analysis.models:
-        by_q: dict[str, list[tuple[str, str]]] = {}
+        cites_by_q: dict[int, list[tuple[str, str]]] = {}
         for c in ma.citations:
-            key = f"Q{c.question_index}" if c.question_index else "Overall"
-            by_q.setdefault(key, []).append((c.domain, c.url))
-        for section, pairs in by_q.items():
+            cites_by_q.setdefault(c.question_index or 0, []).append((c.domain, c.url))
+        indices = sorted(set(cites_by_q) | set(ma.self_reported))
+        for idx in indices:
+            pairs = cites_by_q.get(idx, [])
+            sr = ma.self_reported.get(idx, {"cited": [], "named": []})
             domains = ", ".join(sorted({d for d, _ in pairs}))
             ws.cell(row=row, column=1, value=sanitize_cell(ma.model_id))
-            ws.cell(row=row, column=2, value=section)
+            ws.cell(row=row, column=2, value=f"Q{idx}" if idx else "Overall")
             ws.cell(row=row, column=3, value=sanitize_cell(domains)).alignment = _WRAP
-            link = ws.cell(row=row, column=4, value=pairs[0][1])
-            link.hyperlink = pairs[0][1]
-            link.font = Font(color="0563C1", underline="single")
+            c4 = ws.cell(row=row, column=4, value=sanitize_cell(", ".join(sr["cited"])))
+            c4.alignment = _WRAP
+            c5 = ws.cell(row=row, column=5, value=sanitize_cell(", ".join(sr["named"])))
+            c5.alignment = _WRAP
+            if pairs:
+                link = ws.cell(row=row, column=6, value=pairs[0][1])
+                link.hyperlink = pairs[0][1]
+                link.font = Font(color="0563C1", underline="single")
             row += 1
-    ws.column_dimensions["C"].width = 50
-    ws.column_dimensions["D"].width = 40
+    for col, w in {"C": 34, "D": 34, "E": 34, "F": 34}.items():
+        ws.column_dimensions[col].width = w
 
 
 # --- Domain Frequency --------------------------------------------------------

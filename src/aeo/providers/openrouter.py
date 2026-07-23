@@ -113,6 +113,12 @@ class OpenRouterProvider(LLMProvider):
         message = choice.get("message") or {}
         content = message.get("content") or ""
         annotations = message.get("annotations") or []
+        # OpenRouter web plugin returns url_citation annotations for searched pages.
+        search_citations: list[str] = []
+        for ann in annotations:
+            url = (ann.get("url_citation") or {}).get("url") if isinstance(ann, dict) else None
+            if url:
+                search_citations.append(url)
         usage = data.get("usage") or {}
         prompt_tokens = int(usage.get("prompt_tokens", 0) or 0)
         completion_tokens = int(usage.get("completion_tokens", 0) or 0)
@@ -128,7 +134,8 @@ class OpenRouterProvider(LLMProvider):
             completion_tokens=completion_tokens,
             cost_usd=cost_usd,
             latency_ms=latency_ms,
-            web_search_used=bool(annotations) or (requested_search and bool(content)),
+            web_search_used=bool(search_citations) or requested_search,
+            search_citations=search_citations,
         )
 
     def _estimate_cost(self, model: str, prompt_tokens: int, completion_tokens: int) -> float:

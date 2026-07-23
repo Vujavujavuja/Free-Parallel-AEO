@@ -13,6 +13,7 @@ class CitationRecord(BaseModel):
     question_index: int | None = None
     brand_owned: bool = False
     is_reference: bool = False  # matches a user-provided reference site
+    is_search: bool = False  # sourced from a web-search annotation
 
 
 class ModelAnalysis(BaseModel):
@@ -29,6 +30,8 @@ class ModelAnalysis(BaseModel):
     competitor_totals: dict[str, int] = Field(default_factory=dict)
     citations: list[CitationRecord] = Field(default_factory=list)
     unique_domains: list[str] = Field(default_factory=list)
+    # Self-reported per question: {q_index: {"cited": [...], "named": [...]}}
+    self_reported: dict[int, dict[str, list[str]]] = Field(default_factory=dict)
     reference_citations: int = 0  # citations to user-provided reference sites
     answer_length: int = 0
     provenance: Provenance = Provenance.ABSENT

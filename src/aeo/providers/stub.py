@@ -1,11 +1,11 @@
 """Deterministic stub provider for free, offline end-to-end runs and tests.
 
-It never calls the network. It parses the rendered prompt (stable markers set by
-the prompt templates) and fabricates realistic answers that vary by model so the
-analysis engine produces a non-trivial report: some models mention the brand,
-some don't (``absent``), some "search" (``search_driven``) and some don't
-(``organic``), with markdown links, bare URLs, ``Source:`` lines, and
-``Searched for`` traces.
+It never calls the network. For the orchestrator call it parses the company name
+from the (company-bearing) orchestrator prompt. For answer calls it uses context
+supplied via :meth:`configure` — because the neutral answer prompt intentionally
+contains no brand or competitor names. It fabricates realistic answers that vary
+by model so the analysis engine produces a non-trivial report: some models
+mention the brand, some don't (``absent``), some "search" (``search_driven``).
 """
 
 from __future__ import annotations
@@ -15,9 +15,8 @@ import re
 
 from aeo.providers.base import ChatMessage, ChatResult, LLMProvider, ModelInfo
 
-_Q_RE = re.compile(r"^Q(\d+)\.\s*(.+)$", re.MULTILINE)
-_COMPANY_RE = re.compile(r"Company(?: under evaluation)?:\s*(.+)")
-_COMPETITORS_RE = re.compile(r"Competitors to consider:\s*(.+)")
+_Q_RE = re.compile(r"^##\s*Q(\d+)\.\s*(.+)$", re.MULTILINE)
+_COMPANY_RE = re.compile(r"Company:\s*(.+)")
 _COUNT_RE = re.compile(r"exactly\s+(\d+)\s+", re.IGNORECASE)
 
 _STUB_PANEL = [
@@ -34,7 +33,25 @@ def _hash(text: str) -> int:
 
 
 class StubProvider(LLMProvider):
-    """Zero-cost provider. Enable with ``--stub`` / ``provider="stub"``."""
+    """Zero-cost provider. Enable with ``provider="stub"``."""
+
+    def __init__(self) -> None:
+        self._brand = "Acme"
+        self._brand_terms: list[str] = ["Acme"]
+        self._competitors: list[str] = ["Rival One", "Rival Two"]
+        self._domain = "acme.com"
+
+    def configure(self, brand_terms: list[str], competitors: list[str]) -> None:
+        """Supply the brand/competitor context for answer fabrication."""
+        if brand_terms:
+            self._brand = brand_terms[0]
+            self._brand_terms = brand_terms
+            self._domain = next(
+                (t.lower() for t in brand_terms if "." in t),
+                f"{self._brand.split()[0].lower()}.com",
+            )
+        if competitors:
+            self._competitors = competitors
 
     async def chat(
         self,
@@ -49,8 +66,10 @@ class StubProvider(LLMProvider):
         prompt = "\n".join(m.content for m in messages)
         if response_schema is not None:
             content = self._orchestrator_json(prompt)
+            searched = False
         else:
-            content = self._answer(model, prompt, searched=self._searches(model))
+            searched = self._searches(model)
+            content = self._answer(model, prompt, searched=searched)
 
         completion_tokens = max(1, len(content) // 4)
         prompt_tokens = max(1, len(prompt) // 4)
@@ -60,13 +79,10 @@ class StubProvider(LLMProvider):
             finish_reason="stop",
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
-            # Fake but realistic micro-cost so cost tracking/caps are exercised.
             cost_usd=round((prompt_tokens + completion_tokens) * 2e-6, 6),
             latency_ms=5,
-            web_search_used=self._searches(model) and response_schema is None,
-            search_queries=(
-                self._queries(prompt) if self._searches(model) and response_schema is None else []
-            ),
+            web_search_used=searched,
+            search_queries=self._queries() if searched else [],
         )
 
     async def list_models(self) -> list[ModelInfo]:
@@ -84,9 +100,10 @@ class StubProvider(LLMProvider):
         return _hash(model) % 3 != 0
 
     def _orchestrator_json(self, prompt: str) -> str:
-        company = self._company(prompt) or "Acme"
-        m = _COUNT_RE.search(prompt)
-        count = int(m.group(1)) if m else 10
+        m = _COMPANY_RE.search(prompt)
+        company = m.group(1).strip() if m else "Acme"
+        count_m = _COUNT_RE.search(prompt)
+        count = int(count_m.group(1)) if count_m else 10
         categories = [
             "need", "approaches", "differentiation", "evaluation_criteria",
             "pricing", "results_roi", "regulated_fit", "onboarding",
@@ -113,62 +130,44 @@ class StubProvider(LLMProvider):
         )
 
     def _answer(self, model: str, prompt: str, *, searched: bool) -> str:
-        company = self._company(prompt) or "Acme"
-        competitors = self._competitors(prompt) or ["Rival One", "Rival Two"]
+        brand = self._brand
+        competitors = self._competitors
         questions = _Q_RE.findall(prompt) or [("1", "General question")]
         mention_brand = self._mentions_brand(model)
 
-        parts: list[str] = []
-        if searched:
-            for q in self._queries(prompt):
-                parts.append(f"Searched for: {q}")
-            parts.append("")
+        parts: list[str] = ["## Results Table",
+                            "| # | Question Summary | Websites Cited | Websites Mentioned |",
+                            "|---|---|---|---|"]
+        for idx_str, text in questions:
+            cited = f"{self._domain}, g2.com" if mention_brand else "g2.com, wikipedia.org"
+            named = f"{brand}, {competitors[0]}" if mention_brand else competitors[0]
+            parts.append(f"| {idx_str} | {text[:40]} | {cited} | {named} |")
+        parts.append("")
 
         for idx_str, text in questions:
             idx = int(idx_str)
-            parts.append(f"Q{idx}. {text}")
+            parts.append(f"## Q{idx}. {text}")
             if mention_brand and idx % 2 == 1:
                 parts.append(
-                    f"When evaluating this space, {company} is a strong option. "
-                    f"{company} stands out for its documentation. "
-                    f"See [{company} docs](https://{self._domain(prompt)}/docs)."
+                    f"When evaluating this space, {brand} is a strong option. "
+                    f"{brand} stands out for its documentation. "
+                    f"See [{brand} docs](https://{self._domain}/docs)."
                 )
             comp = competitors[idx % len(competitors)]
             parts.append(
                 f"Alternatives include {comp}. According to reviews, {comp} is popular. "
                 f"Source: https://www.g2.com/{comp.lower().replace(' ', '-')}"
             )
-            parts.append(
-                f"Further reading: https://en.wikipedia.org/wiki/{company.replace(' ', '_')}"
-            )
+            cited = f"https://{self._domain}, https://g2.com" if mention_brand else "https://g2.com"
+            named = f"{brand}, {comp}" if mention_brand else comp
+            parts.append(f"Cited: {cited}")
+            parts.append(f"Mentioned: {named}")
             parts.append("")
 
-        parts.append("Cited sources:")
-        parts.append(f"- https://{self._domain(prompt)}")
-        parts.append("- https://g2.com")
-        parts.append("Named vendors:")
-        parts.append(f"- {company}")
-        parts.append(f"- {', '.join(competitors)}")
+        if searched:
+            parts.append("## Searches performed")
+            parts.extend(self._queries())
         return "\n".join(parts)
 
-    @staticmethod
-    def _queries(prompt: str) -> list[str]:
-        company = StubProvider._company(prompt) or "Acme"
-        return [f"{company} reviews", f"best {company} alternatives"]
-
-    @staticmethod
-    def _company(prompt: str) -> str | None:
-        m = _COMPANY_RE.search(prompt)
-        return m.group(1).strip() if m else None
-
-    @staticmethod
-    def _competitors(prompt: str) -> list[str]:
-        m = _COMPETITORS_RE.search(prompt)
-        if not m:
-            return []
-        return [c.strip() for c in m.group(1).split(",") if c.strip()]
-
-    @staticmethod
-    def _domain(prompt: str) -> str:
-        company = StubProvider._company(prompt) or "acme"
-        return f"{company.split()[0].lower()}.com"
+    def _queries(self) -> list[str]:
+        return [f"{self._brand} reviews", f"best {self._brand} alternatives"]

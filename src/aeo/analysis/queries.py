@@ -25,11 +25,31 @@ def parse_query_traces(content: str) -> list[str]:
     return queries
 
 
+_SEARCHES_SECTION_RE = re.compile(
+    r"##\s*Searches?\s+performed\s*\n(.+?)(?:\n##\s|\Z)", re.IGNORECASE | re.DOTALL
+)
+
+
+def parse_searches_section(content: str) -> list[str]:
+    """Extract queries listed under a '## Searches performed' heading."""
+    m = _SEARCHES_SECTION_RE.search(content)
+    if not m:
+        return []
+    queries: list[str] = []
+    for raw in m.group(1).splitlines():
+        line = raw.strip().lstrip("-*0123456789. ").strip("\"'`").strip()
+        if line and not line.startswith("[") and len(line) <= 200:
+            queries.append(line)
+    return queries
+
+
 def merge_queries(reported: list[str], content: str) -> list[str]:
-    """Union of provider-reported queries and text-parsed traces (deduped)."""
+    """Union of provider-reported queries, the 'Searches performed' section, and
+    inline 'Searched for' traces (deduped)."""
     out: list[str] = []
     seen: set[str] = set()
-    for q in [*reported, *parse_query_traces(content)]:
+    candidates = [*reported, *parse_searches_section(content), *parse_query_traces(content)]
+    for q in candidates:
         key = q.lower().strip()
         if key and key not in seen:
             seen.add(key)

@@ -48,6 +48,7 @@ class ModelResponseRecord(BaseModel):
     finish_reason: str | None = None
     web_search_used: bool = False
     search_queries: list[str] = Field(default_factory=list)
+    search_citations: list[str] = Field(default_factory=list)
     prompt_tokens: int = 0
     completion_tokens: int = 0
     cost_usd: float = 0.0
