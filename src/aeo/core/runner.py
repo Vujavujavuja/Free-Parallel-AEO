@@ -17,6 +17,21 @@ from aeo.schemas.run import ModelResponseRecord, RunOptions
 log = get_logger(__name__)
 
 ProgressCb = Callable[[int, int, str], Awaitable[None]] | None
+LogCb = Callable[[str], Awaitable[None]] | None
+
+
+def describe_response(r: ModelResponseRecord) -> str:
+    """One-line human-readable summary of a model response for the live log."""
+    if r.error:
+        return f"{r.model_id}: ERROR — {r.error}"
+    tokens = r.prompt_tokens + r.completion_tokens
+    extra: list[str] = []
+    if r.web_search_used:
+        extra.append(f"{len(r.search_queries)} searches")
+    if r.continuations:
+        extra.append(f"{r.continuations} continuation(s)")
+    suffix = " · " + ", ".join(extra) if extra else ""
+    return f"{r.model_id}: {tokens} tok, ${r.cost_usd:.4f}, {r.latency_ms}ms{suffix}"
 
 _ANSWER_SYSTEM = ChatMessage(
     role="system",
@@ -53,6 +68,7 @@ async def run_models(
     questions: list[Question],
     options: RunOptions,
     on_progress: ProgressCb = None,
+    log_cb: LogCb = None,
 ) -> list[ModelResponseRecord]:
     """Execute the fan-out and return one record per (model[, question])."""
     semaphore = asyncio.Semaphore(max(1, options.concurrency))
@@ -76,6 +92,8 @@ async def run_models(
         async with done_lock:
             done += 1
             current = done
+        if log_cb:
+            await log_cb(describe_response(record))
         if on_progress:
             await on_progress(current, total, model)
         return record

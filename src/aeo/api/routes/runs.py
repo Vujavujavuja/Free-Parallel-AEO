@@ -24,6 +24,7 @@ _MEDIA = {
     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "csv": "text/csv",
     "json": "application/json",
+    "pdf": "application/pdf",
 }
 
 
@@ -41,6 +42,7 @@ async def create_run(
     for field in (
         "question_count", "prompt_mode", "enable_web_search",
         "max_tokens", "concurrency", "cost_cap_usd", "auto_approve_questions",
+        "enable_ai_insights",
     ):
         value = getattr(req, field)
         if value is not None:

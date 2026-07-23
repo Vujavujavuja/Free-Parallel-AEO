@@ -34,6 +34,8 @@ dependencies = [
   "python-multipart>=0.0.9",
   "python-docx>=1.1",
   "pypdf>=4.2",
+  "matplotlib>=3.8",
+  "reportlab>=4.1",
 ]
 
 [project.optional-dependencies]
@@ -75,7 +77,9 @@ ignore = ["B008"]  # FastAPI/Typer use function calls in argument defaults
 "tests/**" = ["B", "SIM"]
 
 [tool.mypy]
-python_version = "3.11"
+# 3.12 so mypy can parse newer dependency stubs (e.g. numpy). Runtime support is
+# still 3.11+ — ruff's py311 target keeps our own code 3.11-compatible.
+python_version = "3.12"
 strict = true
 packages = ["aeo"]
 mypy_path = "src"
@@ -84,7 +88,15 @@ warn_unused_ignores = true
 disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["pandas.*", "openpyxl.*", "sse_starlette.*", "docx.*", "pypdf.*"]
+module = [
+  "pandas.*", "openpyxl.*", "sse_starlette.*", "docx.*", "pypdf.*",
+  "matplotlib.*", "reportlab.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

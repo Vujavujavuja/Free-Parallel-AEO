@@ -44,6 +44,7 @@ export default function NewRun() {
   const [questionCount, setQuestionCount] = useState(10);
   const [webSearch, setWebSearch] = useState(false);
   const [autoApprove, setAutoApprove] = useState(true);
+  const [aiInsights, setAiInsights] = useState(true);
   const [costCap, setCostCap] = useState(5);
   const [keyInput, setKeyInput] = useState("");
   const [savingKey, setSavingKey] = useState(false);
@@ -179,6 +180,7 @@ export default function NewRun() {
         question_count: questionCount,
         enable_web_search: webSearch,
         auto_approve_questions: autoApprove,
+        enable_ai_insights: aiInsights,
         cost_cap_usd: costCap,
         custom_questions: linesToArr(customQuestions),
       });
@@ -399,9 +401,13 @@ export default function NewRun() {
             <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} />
             Enable web search
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm mb-2">
             <input type="checkbox" checked={autoApprove} onChange={(e) => setAutoApprove(e.target.checked)} />
             Auto-approve questions
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={aiInsights} onChange={(e) => setAiInsights(e.target.checked)} />
+            AI insights &amp; quotes
           </label>
         </div>
 

@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from aeo.analysis import analyze
 from aeo.constants import RunStatus
-from aeo.core import orchestrator, runner
+from aeo.core import orchestrator, runner, synthesizer
 from aeo.logging import get_logger
 from aeo.providers.base import LLMProvider
 from aeo.providers.stub import StubProvider
@@ -35,10 +35,19 @@ class ProgressEvent(BaseModel):
     detail: str = ""
     completed: int = 0
     total: int = 0
+    log: str | None = None  # a detailed end-to-end log line, if this event carries one
 
 
 EmitCb = Callable[[ProgressEvent], Awaitable[None]] | None
 ReportFn = Callable[[RunRecord], dict[str, str]] | None
+
+
+async def _emit_log(record: RunRecord, emit: EmitCb, message: str) -> None:
+    """Append a timestamped line to the run's log and stream it live."""
+    line = f"{utcnow().strftime('%H:%M:%S')}  {message}"
+    record.logs.append(line)
+    if emit:
+        await emit(ProgressEvent(run_id=record.id, status=record.status, log=line))
 
 
 async def execute_pipeline(
@@ -68,8 +77,15 @@ async def execute_pipeline(
     try:
         # 1. Questions (custom exact questions + orchestrator-generated remainder)
         await _set(RunStatus.GENERATING_QUESTIONS, "Generating buyer questions")
+        await _emit_log(record, emit, f"Run started for {record.company.name}.")
         custom = [q.strip() for q in record.options.custom_questions if q.strip()]
         needed = max(0, record.options.question_count - len(custom))
+        if needed > 0:
+            await _emit_log(
+                record, emit,
+                f"Orchestrator ({record.options.orchestrator_model}) generating "
+                f"{needed} questions ({len(custom)} custom supplied)…",
+            )
 
         generated: list[Question] = []
         gen_competitors: list[str] = []
@@ -98,6 +114,11 @@ async def execute_pipeline(
         record.competitors = _merge(record.company.competitors, gen_competitors)
         record.brand_aliases = _merge(record.company.aliases, gen_aliases)
         record.company.aliases = record.brand_aliases
+        await _emit_log(
+            record, emit,
+            f"{len(record.questions)} questions ready; "
+            f"{len(record.competitors)} competitors, {len(record.brand_aliases)} brand aliases.",
+        )
         store.save_run(record.model_dump(mode="json"))
 
         if stop_for_approval and not record.options.auto_approve_questions:
@@ -137,6 +158,12 @@ async def resume_after_questions(
         # 2. Fan-out
         n_models = len(record.options.target_models)
         await _set(RunStatus.RUNNING_MODELS, "Querying models", 0, n_models)
+        await _emit_log(
+            record, emit,
+            f"Querying {n_models} models"
+            f"{' with web search' if record.options.enable_web_search else ''} "
+            f"(concurrency {record.options.concurrency}, cap ${record.options.cost_cap_usd:.2f})…",
+        )
 
         async def on_progress(done: int, total: int, model: str) -> None:
             if emit:
@@ -147,30 +174,62 @@ async def resume_after_questions(
                     )
                 )
 
+        async def on_log(line: str) -> None:
+            await _emit_log(record, emit, line)
+
         # The neutral prompt carries no brand/competitor info, so give the stub
         # provider that context out-of-band for realistic offline demos.
         if isinstance(provider, StubProvider):
             provider.configure(record.company.brand_terms, record.competitors)
 
         record.responses = await runner.run_models(
-            provider, record.questions, record.options, on_progress=on_progress,
+            provider, record.questions, record.options,
+            on_progress=on_progress, log_cb=on_log,
         )
         record.total_cost_usd = round(sum(r.cost_usd for r in record.responses), 6)
+        failed = sum(1 for r in record.responses if r.error)
+        await _emit_log(
+            record, emit,
+            f"Fan-out complete: {len(record.responses) - failed}/{len(record.responses)} "
+            f"succeeded, ${record.total_cost_usd:.4f} spent.",
+        )
         store.save_run(record.model_dump(mode="json"))
 
-        # 3. Analysis
+        # 3. Analysis (+ optional AI synthesis pass)
         await _set(RunStatus.ANALYZING, "Analyzing answers")
         result = analyze(record)
+        mentioning = sum(1 for m in result.models if m.brand_mentions > 0)
+        total_mentions = sum(m.brand_mentions for m in result.models)
+        await _emit_log(
+            record, emit,
+            f"Analysis: {total_mentions} brand mentions; {mentioning}/{len(result.models)} "
+            f"models mention {record.company.name}; {len(result.domain_frequency)} cited domains.",
+        )
+        if record.options.enable_ai_insights:
+            await _set(RunStatus.ANALYZING, "Writing AI insights")
+            await _emit_log(record, emit, "Synthesizing AI insights & quotes…")
+            synth = await synthesizer.synthesize(
+                provider, record.options.orchestrator_model,
+                record.company, result, record.responses,
+            )
+            if synth:
+                synthesizer.apply_synthesis(result, synth)
+                await _emit_log(
+                    record, emit, f"AI insights written ({len(result.insights)} findings)."
+                )
         record.analysis = result.model_dump(mode="json")
         store.save_run(record.model_dump(mode="json"))
 
         # 4. Reports
         await _set(RunStatus.REPORTING, "Generating reports")
+        await _emit_log(record, emit, "Rendering reports (xlsx, csv, json, pdf)…")
         if report_fn is not None:
             record.reports = report_fn(record)
+            await _emit_log(record, emit, f"Reports ready: {', '.join(record.reports)}.")
 
         # 5. Done
         record.completed_at = utcnow()
+        await _emit_log(record, emit, f"Completed. Total cost ${record.total_cost_usd:.4f}.")
         await _set(RunStatus.COMPLETED, "Completed")
         return record
     except Exception as exc:

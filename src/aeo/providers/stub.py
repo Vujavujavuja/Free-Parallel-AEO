@@ -65,7 +65,12 @@ class StubProvider(LLMProvider):
     ) -> ChatResult:
         prompt = "\n".join(m.content for m in messages)
         if response_schema is not None:
-            content = self._orchestrator_json(prompt)
+            props = response_schema.get("properties", {})
+            content = (
+                self._synthesis_json(prompt)
+                if isinstance(props, dict) and "findings" in props
+                else self._orchestrator_json(prompt)
+            )
             searched = False
         else:
             searched = self._searches(model)
@@ -127,6 +132,35 @@ class StubProvider(LLMProvider):
                 "competitors": ["Rival One", "Rival Two", "Rival Three"],
                 "brand_aliases": [company, company.split()[0]],
             }
+        )
+
+    def _synthesis_json(self, prompt: str) -> str:
+        brand = self._brand
+        idxs = sorted({int(m) for m in re.findall(r"Q(\d+):", prompt)}) or list(range(1, 11))
+        qi = [
+            {
+                "index": i,
+                "interpretation": (
+                    f"{brand} shows moderate visibility on question {i}; framing stays "
+                    f"category-first with {brand} positioned on differentiation."
+                ),
+            }
+            for i in idxs
+        ]
+        findings = [
+            f"{brand} is surfaced by most models, primarily organically.",
+            f"Competitors cluster around a few well-known names; {brand} holds share on "
+            "differentiation questions.",
+            "Brand-owned domains are cited alongside third-party review sites.",
+            "Pricing and onboarding questions show the thinnest brand coverage.",
+            "Search-driven models lean on analyst and review sources.",
+        ]
+        quotes = [
+            {"model": m, "quote": f"{brand} is a strong option for teams evaluating this category."}
+            for m in _STUB_PANEL[:3]
+        ]
+        return json.dumps(
+            {"question_interpretations": qi, "findings": findings, "quotes": quotes}
         )
 
     def _answer(self, model: str, prompt: str, *, searched: bool) -> str:

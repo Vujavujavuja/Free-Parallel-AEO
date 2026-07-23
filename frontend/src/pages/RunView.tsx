@@ -18,14 +18,16 @@ export default function RunView() {
   const { id = "" } = useParams();
   const [run, setRun] = useState<RunRecord | null>(null);
   const [event, setEvent] = useState<ProgressEvent | null>(null);
+  const [logs, setLogs] = useState<string[]>([]);
   const esRef = useRef<EventSource | null>(null);
 
   const subscribe = useCallback(() => {
     esRef.current?.close();
     esRef.current = api.events(id, (ev) => {
       setEvent(ev);
+      if (ev.log) setLogs((prev) => [...prev, ev.log as string]);
       if (["completed", "failed", "awaiting_approval"].includes(ev.status)) {
-        api.getRun(id).then(setRun);
+        api.getRun(id).then((r) => { setRun(r); setLogs(r.logs ?? []); });
         esRef.current?.close();
       } else {
         setRun((prev) => (prev ? { ...prev, status: ev.status } : prev));
@@ -36,6 +38,7 @@ export default function RunView() {
   useEffect(() => {
     api.getRun(id).then((r) => {
       setRun(r);
+      setLogs(r.logs ?? []);
       if (!TERMINAL.includes(r.status)) subscribe();
     });
     return () => esRef.current?.close();
@@ -72,7 +75,36 @@ export default function RunView() {
         <QuestionReview run={run} onApprove={() => subscribe()} setRun={setRun} />
       )}
 
+      {logs.length > 0 && <LogPanel logs={logs} live={!TERMINAL.includes(run.status)} />}
+
       {run.status === "completed" && <Dashboard run={run} />}
+    </div>
+  );
+}
+
+function LogPanel({ logs, live }: { logs: string[]; live: boolean }) {
+  const [open, setOpen] = useState(true);
+  const endRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (open) endRef.current?.scrollIntoView({ block: "nearest" });
+  }, [logs, open]);
+  return (
+    <div className="card">
+      <button className="flex items-center justify-between w-full mb-2" onClick={() => setOpen((o) => !o)}>
+        <span className="font-semibold flex items-center gap-2">
+          Activity log
+          {live && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
+        </span>
+        <span className="text-xs text-slate-400">{open ? "hide" : "show"} · {logs.length} lines</span>
+      </button>
+      {open && (
+        <div className="bg-ink border border-edge rounded-lg p-3 max-h-72 overflow-y-auto font-mono text-xs leading-relaxed">
+          {logs.map((line, i) => (
+            <div key={i} className="text-slate-300 whitespace-pre-wrap">{line}</div>
+          ))}
+          <div ref={endRef} />
+        </div>
+      )}
     </div>
   );
 }

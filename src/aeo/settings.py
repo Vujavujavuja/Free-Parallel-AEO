@@ -37,6 +37,7 @@ _TOML_FIELD_MAP: dict[str, tuple[str, str]] = {
     "cost_cap_usd": ("run", "cost_cap_usd"),
     "auto_approve_questions": ("run", "auto_approve_questions"),
     "max_continuations": ("run", "max_continuations"),
+    "ai_insights": ("run", "ai_insights"),
     "openrouter_base_url": ("openrouter", "base_url"),
     "openrouter_http_referer": ("openrouter", "http_referer"),
     "openrouter_x_title": ("openrouter", "x_title"),
@@ -96,6 +97,7 @@ class Settings(BaseSettings):
     cost_cap_usd: float = 5.0
     auto_approve_questions: bool = True
     max_continuations: int = 4
+    ai_insights: bool = True
 
     # --- persistence: runs are stored as folders on disk (see aeo.storage) ---
     data_dir: str = "./data"

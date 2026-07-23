@@ -34,6 +34,7 @@ class RunOptions(BaseModel):
     cost_cap_usd: float = 5.0
     auto_approve_questions: bool = True
     max_continuations: int = 4
+    enable_ai_insights: bool = True  # LLM synthesis pass for interpretations/quotes
     # Exact questions supplied by the user; included verbatim in the run.
     custom_questions: list[str] = Field(default_factory=list)
 
@@ -83,6 +84,7 @@ class RunRecord(BaseModel):
     total_cost_usd: float = 0.0
     error: str | None = None
     reports: dict[str, str] = Field(default_factory=dict)
+    logs: list[str] = Field(default_factory=list)  # human-readable end-to-end log lines
 
     def summary(self) -> RunSummary:
         return RunSummary(

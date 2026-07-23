@@ -19,6 +19,7 @@ concurrency = 6
 cost_cap_usd = 5.0
 auto_approve_questions = true
 max_continuations = 4            # truncation auto-continue cap
+ai_insights = true               # LLM synthesis pass for interpretations/quotes
 
 [openrouter]
 base_url = "https://openrouter.ai/api/v1"

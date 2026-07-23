@@ -44,8 +44,9 @@ export default function Dashboard({ run }: { run: RunRecord }) {
 
       {/* Downloads */}
       <div className="flex flex-wrap gap-3">
-        {["xlsx", "csv", "json"].map((fmt) => (
-          <a key={fmt} className="btn-ghost text-sm" href={api.reportUrl(run.id, fmt)}>
+        {["pdf", "xlsx", "csv", "json"].map((fmt) => (
+          <a key={fmt} className={fmt === "pdf" ? "btn-primary text-sm" : "btn-ghost text-sm"}
+             href={api.reportUrl(run.id, fmt)}>
             Download {fmt.toUpperCase()}
           </a>
         ))}

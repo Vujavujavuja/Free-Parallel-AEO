@@ -31,6 +31,7 @@ def options_from_settings(
         cost_cap_usd=settings.cost_cap_usd,
         auto_approve_questions=settings.auto_approve_questions,
         max_continuations=settings.max_continuations,
+        enable_ai_insights=settings.ai_insights,
     )
 
 

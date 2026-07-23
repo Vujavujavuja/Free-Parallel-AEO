@@ -47,6 +47,7 @@ export interface RunCreateRequest {
   enable_web_search?: boolean | null;
   cost_cap_usd?: number | null;
   auto_approve_questions?: boolean | null;
+  enable_ai_insights?: boolean | null;
   custom_questions?: string[] | null;
 }
 
@@ -123,6 +124,7 @@ export interface RunRecord {
   total_cost_usd: number;
   error?: string | null;
   reports: Record<string, string>;
+  logs: string[];
 }
 
 export interface RunSummary {
@@ -141,6 +143,7 @@ export interface ProgressEvent {
   detail: string;
   completed: number;
   total: number;
+  log?: string | null;
 }
 
 async function j<T>(res: Response): Promise<T> {
