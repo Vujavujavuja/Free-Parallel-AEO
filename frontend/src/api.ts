@@ -1,4 +1,4 @@
-// Typed client for the Free-Parallel-AEO REST API.
+// Typed client for the Parallel-AEO REST API.
 
 export type Provider = "openrouter" | "stub";
 export type PromptMode = "single_shot" | "per_question";

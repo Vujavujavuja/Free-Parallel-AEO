@@ -217,7 +217,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# --- Free-Parallel-AEO runtime ---
+# --- Parallel-AEO runtime ---
 /data/
 !/data/.gitkeep
 /reports/

@@ -7,8 +7,12 @@
 }
 
 body {
-  @apply bg-ink text-slate-200;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  @apply bg-ink text-cream font-body;
+  font-feature-settings: "liga" 1, "onum" 1;
+}
+
+h1, h2, h3 {
+  @apply font-display;
 }
 
 @layer components {
@@ -19,25 +23,28 @@ body {
     @apply px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-blue-600 hover:bg-blue-500 text-white;
+    @apply btn bg-ember hover:bg-ember-400 text-ink font-semibold;
   }
   .btn-ghost {
-    @apply btn border border-edge hover:bg-edge text-slate-200;
+    @apply btn border border-edge hover:bg-edge text-cream;
   }
   .input {
-    @apply w-full bg-ink border border-edge rounded-lg px-3 py-2 text-sm
-      focus:outline-none focus:ring-2 focus:ring-blue-600;
+    @apply w-full bg-ink border border-edge rounded-lg px-3 py-2 text-sm text-cream
+      focus:outline-none focus:ring-2 focus:ring-ember/60 placeholder:text-dim;
   }
   .label {
-    @apply block text-xs font-medium text-slate-400 mb-1;
+    @apply block text-xs font-mono uppercase tracking-wide text-dim mb-1;
   }
   .th {
-    @apply text-left text-xs font-semibold text-slate-400 uppercase tracking-wide px-3 py-2;
+    @apply text-left text-[11px] font-mono uppercase tracking-wide text-muted px-3 py-2;
   }
   .td {
     @apply px-3 py-2 text-sm border-t border-edge;
   }
   .pill {
-    @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-block px-2 py-0.5 rounded-full text-xs font-mono font-medium;
+  }
+  .kicker {
+    @apply text-[11px] font-mono uppercase tracking-widest text-ember;
   }
 }

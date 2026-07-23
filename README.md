@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/parallel-aeo_dots.png" alt="Free-Parallel-AEO" width="400">
+  <img src="assets/parallel-aeo_dots.png" alt="Parallel-AEO" width="400">
 </p>
 
 # Parallel-AEO
@@ -28,6 +28,29 @@ Each run generates:
 Runs are also viewable in the web UI and stored on disk so they persist between
 restarts.
 
+## Example output
+
+A sample scan for a fictional company, **Acme Co**, run across eight models.
+
+### PDF report
+
+A designed, shareable summary — executive summary, KPI tiles, provenance donut,
+per-model and competitor charts, a model×question heatmap, per-question reads,
+and pull-quotes.
+
+<p align="center">
+  <img src="docs/img/pdf-page-1.png" alt="Acme Co PDF report — page 1" width="49%">
+  <img src="docs/img/pdf-page-2.png" alt="Acme Co PDF report — page 2" width="49%">
+</p>
+
+### XLSX workbook
+
+Every number, across eight sheets, with live Excel formulas (Overview sheet shown).
+
+<p align="center">
+  <img src="docs/img/xlsx-overview.png" alt="Acme Co XLSX — Overview sheet" width="80%">
+</p>
+
 ## Requirements
 
 - **Python 3.11 or newer.** This is the only hard requirement to start.
@@ -47,8 +70,8 @@ tests, not for real analysis.
 If you already work with Python, this is the whole thing:
 
 ```bash
-git clone https://github.com/Vujavujavuja/Free-Parallel-AEO.git
-cd Free-Parallel-AEO
+git clone https://github.com/Vujavujavuja/Parallel-AEO.git
+cd Parallel-AEO
 python run.py
 ```
 
@@ -78,16 +101,16 @@ To confirm it worked, open a terminal (see step 3) and type `python --version`
 
 - Easiest: on the GitHub page, click the green **Code** button, choose
   **Download ZIP**, then unzip it. You will get a folder named
-  `Free-Parallel-AEO`.
+  `Parallel-AEO`.
 - Or, if you have Git installed:
-  `git clone https://github.com/Vujavujavuja/Free-Parallel-AEO.git`.
+  `git clone https://github.com/Vujavujavuja/Parallel-AEO.git`.
 
 **3. Open a terminal in that folder.**
 
-- **Windows:** open the `Free-Parallel-AEO` folder in File Explorer, click the
+- **Windows:** open the `Parallel-AEO` folder in File Explorer, click the
   address bar, type `cmd`, and press Enter.
 - **macOS:** open the Terminal app, type `cd ` (with a space), drag the
-  `Free-Parallel-AEO` folder onto the window, and press Enter.
+  `Parallel-AEO` folder onto the window, and press Enter.
 - **Linux:** right-click the folder and choose "Open Terminal Here", or `cd` into
   it.
 
@@ -209,6 +232,31 @@ make build      # rebuild the frontend into src/aeo/web/dist
 
 The backend is FastAPI (Python); the frontend is React with Vite and is served
 as static files by the backend. Analysis is deterministic and covered by tests.
+
+## The web app
+
+The whole workflow runs in the browser at <http://127.0.0.1:8000>.
+
+**New Run** — enter the company profile, upload documents, add your own questions,
+search and pick models from the live OpenRouter catalogue, and set options.
+
+<p align="center">
+  <img src="docs/img/app-new-run.png" alt="Parallel-AEO — New Run screen" width="90%">
+</p>
+
+**Results dashboard** — a live activity log, KPI tiles, insights, provenance,
+competitor share of voice, a ranked overview, the mention heatmap, per-question
+aggregate, cited domains, search queries, quotes, and one-click downloads.
+
+<p align="center">
+  <img src="docs/img/app-dashboard.png" alt="Parallel-AEO — results dashboard" width="90%">
+</p>
+
+**Runs** — every past run, re-runnable or editable.
+
+<p align="center">
+  <img src="docs/img/app-runs.png" alt="Parallel-AEO — runs list" width="90%">
+</p>
 
 ## License
 

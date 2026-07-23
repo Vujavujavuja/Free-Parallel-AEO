@@ -13,14 +13,20 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
 from aeo.analysis import AnalysisResult
+from aeo.reports import theme as T
 from aeo.reports.base import get_analysis, sanitize_cell
 from aeo.schemas.run import RunRecord
 
 SHEET_HEATMAP = "Mention Heatmap"
 
-_HEADER_FONT = Font(bold=True, color="FFFFFF")
-_HEADER_FILL = PatternFill("solid", fgColor="2F5597")
-_BRAND_FILL = PatternFill("solid", fgColor="C6EFCE")
+
+def _argb(hex_color: str) -> str:
+    return "FF" + hex_color.lstrip("#").upper()
+
+
+_HEADER_FONT = Font(bold=True, color=_argb(T.CREAM))
+_HEADER_FILL = PatternFill("solid", fgColor=_argb(T.INK))
+_BRAND_FILL = PatternFill("solid", fgColor="FFF5E1D3")  # warm ember tint
 _WRAP = Alignment(wrap_text=True, vertical="top")
 
 

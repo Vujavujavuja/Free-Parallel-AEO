@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "free-parallel-aeo"
+name = "parallel-aeo"
 version = "0.1.0"
-description = "Free-Parallel-AEO — an open-source, self-hostable AI brand-visibility scanner."
+description = "Parallel-AEO — an open-source, self-hostable AI brand-visibility scanner."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -55,8 +55,8 @@ dev = [
 aeo = "aeo.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/nvujic2002/Free-Parallel-AEO"
-Repository = "https://github.com/nvujic2002/Free-Parallel-AEO"
+Homepage = "https://github.com/Vujavujavuja/Parallel-AEO"
+Repository = "https://github.com/Vujavujavuja/Parallel-AEO"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aeo"]

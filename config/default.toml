@@ -1,4 +1,4 @@
-# Non-secret defaults for Free-Parallel-AEO.
+# Non-secret defaults for Parallel-AEO.
 # Values here are overridden by environment variables / .env (see aeo.settings).
 
 [app]
@@ -23,8 +23,8 @@ ai_insights = true               # LLM synthesis pass for interpretations/quotes
 
 [openrouter]
 base_url = "https://openrouter.ai/api/v1"
-http_referer = "https://github.com/nvujic2002/Free-Parallel-AEO"
-x_title = "Free-Parallel-AEO"
+http_referer = "https://github.com/Vujavujavuja/Parallel-AEO"
+x_title = "Parallel-AEO"
 timeout_seconds = 120.0
 max_retries = 4
 

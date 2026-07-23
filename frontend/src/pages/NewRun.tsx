@@ -198,7 +198,7 @@ export default function NewRun() {
   return (
     <div className="space-y-4">
       {preset && (
-        <div className="card border-blue-600/40 bg-blue-600/10 text-sm flex items-center justify-between">
+        <div className="card border-ember/40 bg-ember/10 text-sm flex items-center justify-between">
           <span>
             {editMode ? (
               <>Editing <strong>{preset}</strong> — running will <strong>replace</strong> the original run.</>
@@ -206,7 +206,7 @@ export default function NewRun() {
               <>Reusing settings from a previous run of <strong>{preset}</strong>. Change the models and run again.</>
             )}
           </span>
-          <button className="text-slate-400 hover:text-white text-xs" onClick={() => { setPreset(null); nav("/", { replace: true }); }}>
+          <button className="text-muted hover:text-white text-xs" onClick={() => { setPreset(null); nav("/", { replace: true }); }}>
             start blank
           </button>
         </div>
@@ -237,7 +237,7 @@ export default function NewRun() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-lg font-semibold">Model panel</h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-dim">
                 {provider === "stub"
                   ? "Stub panel"
                   : hasKey
@@ -254,12 +254,12 @@ export default function NewRun() {
           {selected.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {selected.map((id) => (
-                <span key={id} className="pill bg-blue-600/30 text-blue-200 flex items-center gap-2">
+                <span key={id} className="pill bg-ember/20 text-ember-400 flex items-center gap-2">
                   {id}
                   <button className="hover:text-white" onClick={() => toggleModel(id)}>×</button>
                 </span>
               ))}
-              <button className="text-xs text-slate-400 hover:text-white" onClick={() => setSelected([])}>
+              <button className="text-xs text-muted hover:text-white" onClick={() => setSelected([])}>
                 clear all
               </button>
             </div>
@@ -272,9 +272,9 @@ export default function NewRun() {
             onChange={(e) => setModelSearch(e.target.value)}
           />
 
-          {modelsError && <p className="text-sm text-red-400 mb-2">{modelsError}</p>}
+          {modelsError && <p className="text-sm text-wine mb-2">{modelsError}</p>}
           {catalog.length === 0 && !loadingModels && !modelsError ? (
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted">
               Leave empty to use the default panel, or add a key and refresh to pick models.
             </p>
           ) : (
@@ -284,19 +284,19 @@ export default function NewRun() {
                   <input type="checkbox" checked={selected.includes(m.id)} onChange={() => toggleModel(m.id)} />
                   <span className="flex-1 truncate">{m.id}</span>
                   {provider === "openrouter" && (
-                    <span className="text-xs text-slate-500 whitespace-nowrap">
+                    <span className="text-xs text-dim whitespace-nowrap">
                       {perMillion(m.prompt_price)}/{perMillion(m.completion_price)} per M
                     </span>
                   )}
                 </label>
               ))}
               {filteredModels.length === 0 && (
-                <p className="text-sm text-slate-500 py-2">No models match “{modelSearch}”.</p>
+                <p className="text-sm text-dim py-2">No models match “{modelSearch}”.</p>
               )}
             </div>
           )}
           {filteredModels.length > 0 && modelSearch && (
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-dim mt-2">
               {filteredModels.length} of {catalog.length} shown · {selected.length} selected
             </p>
           )}
@@ -311,7 +311,7 @@ export default function NewRun() {
           </div>
           <input ref={fileInput} type="file" multiple hidden accept=".docx,.pdf,.md,.markdown,.txt"
             onChange={onFiles} />
-          <p className="text-sm text-slate-400 mb-2">
+          <p className="text-sm text-muted mb-2">
             docx, pdf, md, txt — parsed and fed to the orchestrator as context.
           </p>
           {documents.length > 0 && (
@@ -319,7 +319,7 @@ export default function NewRun() {
               {documents.map((d, i) => (
                 <span key={i} className="pill bg-edge flex items-center gap-2">
                   {d.name} · {d.text.length} chars
-                  <button className="text-slate-400 hover:text-white"
+                  <button className="text-muted hover:text-white"
                     onClick={() => setDocuments((ds) => ds.filter((_, j) => j !== i))}>×</button>
                 </span>
               ))}
@@ -329,14 +329,14 @@ export default function NewRun() {
 
         <div className="card">
           <h2 className="text-lg font-semibold mb-2">Your exact questions (optional)</h2>
-          <p className="text-sm text-slate-400 mb-2">
+          <p className="text-sm text-muted mb-2">
             One per line. These run verbatim; the orchestrator fills the rest up to the question count.
           </p>
           <textarea className="input font-mono text-sm" rows={4}
             placeholder={"Is Acme SOC 2 compliant?\nHow does Acme price for startups?"}
             value={customQuestions} onChange={(e) => setCustomQuestions(e.target.value)} />
           {linesToArr(customQuestions).length > 0 && (
-            <p className="text-xs text-slate-400 mt-1">{linesToArr(customQuestions).length} custom question(s).</p>
+            <p className="text-xs text-muted mt-1">{linesToArr(customQuestions).length} custom question(s).</p>
           )}
         </div>
       </div>
@@ -347,8 +347,8 @@ export default function NewRun() {
           <Field label="OpenRouter API key">
             {hasKey && !editingKey ? (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-green-400">✓ Key set</span>
-                <button className="text-slate-400 hover:text-white text-xs" onClick={() => setEditingKey(true)}>
+                <span className="text-ember">✓ Key set</span>
+                <button className="text-muted hover:text-white text-xs" onClick={() => setEditingKey(true)}>
                   change
                 </button>
               </div>
@@ -373,10 +373,10 @@ export default function NewRun() {
                     </button>
                   )}
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-dim">
                   Stored locally in .env, validated with OpenRouter. Get one at openrouter.ai/keys.
                 </p>
-                {keyError && <p className="text-xs text-red-400">{keyError}</p>}
+                {keyError && <p className="text-xs text-wine">{keyError}</p>}
               </div>
             )}
           </Field>
@@ -387,7 +387,7 @@ export default function NewRun() {
                 OpenRouter
               </Toggle>
             </div>
-            {!hasKey && <p className="text-xs text-amber-500 mt-1">No API key set — stub only.</p>}
+            {!hasKey && <p className="text-xs text-wine mt-1">No API key set — stub only.</p>}
           </Field>
           <Field label="Question count">
             <input type="number" className="input" min={1} max={30} value={questionCount}
@@ -411,7 +411,7 @@ export default function NewRun() {
           </label>
         </div>
 
-        {error && <div className="card border-red-500/50 text-red-400 text-sm">{error}</div>}
+        {error && <div className="card border-wine/50 text-wine text-sm">{error}</div>}
 
         <button className="btn-primary w-full" onClick={submit} disabled={submitting || !form.name}>
           {submitting ? "Starting…" : editMode ? "Save & re-run" : "Run Scan"}
@@ -438,7 +438,7 @@ function Toggle({ active, onClick, disabled, children }: {
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`btn text-sm flex-1 ${active ? "bg-blue-600 text-white" : "border border-edge text-slate-300"}`}
+      className={`btn text-sm flex-1 ${active ? "bg-ember text-white" : "border border-edge text-cream"}`}
     >
       {children}
     </button>

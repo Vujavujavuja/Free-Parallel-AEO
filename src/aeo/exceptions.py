@@ -1,4 +1,4 @@
-"""Typed exception hierarchy for Free-Parallel-AEO."""
+"""Typed exception hierarchy for Parallel-AEO."""
 
 from __future__ import annotations
 

@@ -31,7 +31,7 @@ build:  ## Build the frontend into src/aeo/web/dist
 	cd frontend && npm install && npm run build
 
 docker:  ## Build the Docker image
-	docker build -t free-parallel-aeo:latest .
+	docker build -t parallel-aeo:latest .
 
 clean:  ## Remove build/test artifacts
 	rm -rf .pytest_cache .mypy_cache .ruff_cache dist build *.egg-info htmlcov .coverage

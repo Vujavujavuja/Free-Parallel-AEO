@@ -44,14 +44,14 @@ export default function RunView() {
     return () => esRef.current?.close();
   }, [id, subscribe]);
 
-  if (!run) return <p className="text-slate-400">Loading…</p>;
+  if (!run) return <p className="text-muted">Loading…</p>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">{run.company.name}</h1>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-dim">
             Run {run.id} · {run.options.target_models.length} models
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function RunView() {
       </div>
 
       {run.status === "failed" && (
-        <div className="card border-red-500/50 text-red-400">Run failed: {run.error}</div>
+        <div className="card border-wine/50 text-wine">Run failed: {run.error}</div>
       )}
 
       {!TERMINAL.includes(run.status) && run.status !== "awaiting_approval" && (
@@ -93,14 +93,14 @@ function LogPanel({ logs, live }: { logs: string[]; live: boolean }) {
       <button className="flex items-center justify-between w-full mb-2" onClick={() => setOpen((o) => !o)}>
         <span className="font-semibold flex items-center gap-2">
           Activity log
-          {live && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
+          {live && <span className="w-2 h-2 rounded-full bg-ember animate-pulse" />}
         </span>
-        <span className="text-xs text-slate-400">{open ? "hide" : "show"} · {logs.length} lines</span>
+        <span className="text-xs text-muted">{open ? "hide" : "show"} · {logs.length} lines</span>
       </button>
       {open && (
         <div className="bg-ink border border-edge rounded-lg p-3 max-h-72 overflow-y-auto font-mono text-xs leading-relaxed">
           {logs.map((line, i) => (
-            <div key={i} className="text-slate-300 whitespace-pre-wrap">{line}</div>
+            <div key={i} className="text-cream whitespace-pre-wrap">{line}</div>
           ))}
           <div ref={endRef} />
         </div>
@@ -120,10 +120,10 @@ function StageTracker({ status, event }: { status: string; event: ProgressEvent 
           return (
             <div key={s} className="flex-1 flex items-center">
               <div className={`w-7 h-7 rounded-full grid place-items-center text-xs font-bold
-                ${done ? "bg-green-600" : active ? "bg-blue-600 animate-pulse" : "bg-edge"}`}>
+                ${done ? "bg-ember" : active ? "bg-ember animate-pulse" : "bg-edge"}`}>
                 {done ? "✓" : i + 1}
               </div>
-              <span className={`ml-2 text-xs ${active ? "text-white" : "text-slate-500"}`}>{label}</span>
+              <span className={`ml-2 text-xs ${active ? "text-white" : "text-dim"}`}>{label}</span>
               {i < STAGES.length - 1 && <div className="flex-1 h-px bg-edge mx-2" />}
             </div>
           );
@@ -132,10 +132,10 @@ function StageTracker({ status, event }: { status: string; event: ProgressEvent 
       {event && event.total > 0 && (
         <div>
           <div className="h-2 bg-edge rounded-full overflow-hidden">
-            <div className="h-full bg-blue-600 transition-all"
+            <div className="h-full bg-ember transition-all"
               style={{ width: `${(100 * event.completed) / event.total}%` }} />
           </div>
-          <p className="text-xs text-slate-400 mt-2">
+          <p className="text-xs text-muted mt-2">
             {event.completed}/{event.total} · {event.detail}
           </p>
         </div>
@@ -162,7 +162,7 @@ function QuestionReview({ run, onApprove, setRun }: {
   return (
     <div className="card">
       <h3 className="font-semibold mb-1">Review questions</h3>
-      <p className="text-sm text-slate-400 mb-4">Edit the generated questions, then approve to run the panel.</p>
+      <p className="text-sm text-muted mb-4">Edit the generated questions, then approve to run the panel.</p>
       <div className="space-y-2">
         {questions.map((q, i) => (
           <div key={q.index} className="flex gap-2 items-start">

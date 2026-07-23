@@ -104,8 +104,8 @@ class Settings(BaseSettings):
 
     # --- openrouter client ---
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    openrouter_http_referer: str = "https://github.com/nvujic2002/Free-Parallel-AEO"
-    openrouter_x_title: str = "Free-Parallel-AEO"
+    openrouter_http_referer: str = "https://github.com/Vujavujavuja/Parallel-AEO"
+    openrouter_x_title: str = "Parallel-AEO"
     openrouter_timeout_seconds: float = 120.0
     openrouter_max_retries: int = 4
 

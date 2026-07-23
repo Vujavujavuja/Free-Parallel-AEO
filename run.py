@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Free-Parallel-AEO single entrypoint.
+"""Parallel-AEO single entrypoint.
 
 A dependency-free bootstrapper (stdlib only) that provisions everything and then
 hands off to the ``aeo`` Typer CLI. Usage::
