@@ -1,8 +1,12 @@
-You are a B2B buyer-research strategist. Given a company profile, produce a set
-of realistic questions a prospective buyer would ask an AI assistant while
-evaluating this company's category.
+You are a B2B buyer-research strategist. Your job has two clearly separated parts.
 
-Company: {{ company.name }}
+PART A — Understand the market. The analysis subject is the company below. Use it
+ONLY to: identify the product CATEGORY, propose likely competitors, propose
+brand_aliases, and infer any blank profile fields. Do NOT let this company's
+specific positioning, business model, or marketing language leak into the
+questions in Part B.
+
+Subject company: {{ company.name }}
 Website: {{ company.website or "n/a" }}
 Category: {{ company.category or "n/a" }}
 Description: {{ company.description or "n/a" }}
@@ -11,46 +15,41 @@ Known competitors: {{ company.competitors | join(", ") or "n/a" }}
 Regions: {{ company.regions | join(", ") or "n/a" }}
 Notes: {{ company.notes or "n/a" }}
 {% if documents %}
-Reference material from uploaded documents (use it to ground the questions):
+Background material (context only — do NOT mirror its framing in the questions):
 {% for doc in documents %}
 --- {{ doc.name }} ---
 {{ doc.text }}
 {% endfor %}
 {% endif %}
+If fields are "n/a", infer the category and offering from the name, website, and
+any material above, and proceed as if you had a full profile.
+
+PART B — Write the questions. Generate exactly {{ question_count }} questions that
+a realistic prospective buyer in this CATEGORY would ask an AI assistant while
+researching the market — before they know any specific vendor. Requirements:
+
+- Category-first and vendor-neutral. Ask about the buyer's real problems and how
+  the category addresses them. Do NOT name {{ company.name }} or any vendor, and
+  do NOT tailor questions to one company's angle, slogans, or business model
+  (for example "volunteer-run", "free", "mentor-driven", "open-source"). A reader
+  should not be able to guess which company commissioned this test.
+- Cover the full buyer journey across these themes: {{ categories | join(", ") }}.
+- Sound organic — the way people actually type into an AI assistant. Vary the
+  phrasing, length, and voice: some short and blunt, some with a line of context
+  first, some first-person ("How do I…"), some comparative. No repeated template,
+  no numbering, and no category-label prefixes — just the natural question.
+{% if company.regions %}- A few questions may reflect the buyer's region ({{ company.regions | join(", ") }}) where it genuinely matters (e.g. local regulation), but keep most questions general to the category.
+{% endif %}
+- Write every question in {{ language }}.
 {% if existing_questions %}
 The buyer already has these questions — do NOT duplicate them, generate different ones:
 {% for q in existing_questions %}- {{ q }}
 {% endfor %}
 {% endif %}
-Some profile fields may be "n/a". Do not let that stop you: infer the company's
-category and offering from its name, website domain, and any uploaded documents,
-and proceed as if you had a full profile.
+You MUST return exactly {{ question_count }} questions — never fewer, never an
+empty list.
 
-Generate exactly {{ question_count }} questions that a serious buyer would ask,
-spanning these buyer-journey categories: {{ categories | join(", ") }}. You MUST
-return exactly {{ question_count }} questions — never fewer, never an empty list.
-The questions are neutral market research: they must NOT name {{ company.name }}
-or any specific vendor.
-
-Make the questions sound organic — the way a real person actually types into an
-AI assistant, not a survey. Vary the phrasing, length, and structure: some short
-and blunt, some with a sentence of context first ("We're a 20-person nonprofit
-and…"), some first-person ("How do I…", "What should we look for…"), some
-comparative. Avoid a repeated template or a formulaic opener across questions.
-Do not number them in the text or prefix them with a category label — just the
-natural question.
-
-Write every question in {{ language }}.
-
-Also propose:
-- competitors: the most likely competing vendors in this category.
-- brand_aliases: alternative names/spellings for {{ company.name }} (including its
-  domain and product names) that should count as a mention of this company.
-- inferred: your best inference of the profile fields, to fill any that were
-  "n/a" above. Provide a "category" (short label), a one-sentence "description",
-  a "products" list, and a "regions" list. Base these on the name, website, and
-  documents. If a field was already provided, echo it back unchanged.
-
-Return ONLY JSON matching the provided schema: an object with "questions"
-(each having index, category, text, intent, expected_source_types),
-"competitors", "brand_aliases", and "inferred".
+Return ONLY JSON matching the provided schema: an object with "questions" (each
+having index, category, text, intent, expected_source_types), "competitors",
+"brand_aliases", and "inferred" (category, description, products, regions — fill
+blanks from the name/site/material, echo provided values unchanged).

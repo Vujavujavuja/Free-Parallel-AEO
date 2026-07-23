@@ -47,6 +47,7 @@ export interface RunCreateRequest {
   question_count?: number | null;
   prompt_mode?: PromptMode | null;
   enable_web_search?: boolean | null;
+  max_tokens?: number | null;
   cost_cap_usd?: number | null;
   auto_approve_questions?: boolean | null;
   enable_ai_insights?: boolean | null;
@@ -129,6 +130,7 @@ export interface RunRecord {
     target_models: string[];
     orchestrator_model?: string;
     language?: string;
+    max_tokens?: number;
     question_count: number;
     provider: string;
     custom_questions?: string[];

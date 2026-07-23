@@ -118,7 +118,7 @@ async def synthesize(
     """Return {question_interpretations, findings, quotes, recommendations} or
     None on failure. The token budget scales with the question count so the last
     field (recommendations) isn't starved and truncated on larger runs."""
-    budget = max_tokens or max(4000, len(analysis.questions) * 300 + 3000)
+    budget = max_tokens or max(8000, len(analysis.questions) * 400 + 4000)
     prompt = (
         f"Analyze this AI brand-visibility run for {company.name} and write insight.\n\n"
         f"{_summary(company, analysis)}\n\n"

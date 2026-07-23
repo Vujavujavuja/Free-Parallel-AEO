@@ -81,9 +81,9 @@ async def generate_questions(
     generic set if the model under-delivers)."""
     cats = categories or DEFAULT_CATEGORIES
     existing = existing_questions or []
-    # Scale the token budget with the requested count so a large set can't be
-    # truncated mid-JSON (each question carries text + intent + source types).
-    budget = max_tokens or max(4000, question_count * 400 + 2000)
+    # Generous token budget that also scales with the count so a large set can't
+    # be truncated mid-JSON (each question carries text + intent + source types).
+    budget = max_tokens or max(8000, question_count * 400 + 4000)
 
     qset = await _generate_once(
         provider, company, model=model, question_count=question_count,

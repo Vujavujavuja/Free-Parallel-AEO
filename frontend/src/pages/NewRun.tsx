@@ -44,6 +44,7 @@ export default function NewRun() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [questionCount, setQuestionCount] = useState(10);
   const [language, setLanguage] = useState("English");
+  const [maxTokens, setMaxTokens] = useState(8000);
   const [webSearch, setWebSearch] = useState(false);
   const [autoApprove, setAutoApprove] = useState(true);
   const [aiInsights, setAiInsights] = useState(true);
@@ -83,6 +84,7 @@ export default function NewRun() {
       setSelected(r.options.target_models ?? []);
       setOrchestratorModel(r.options.orchestrator_model ?? "");
       setLanguage(r.options.language ?? "English");
+      setMaxTokens(r.options.max_tokens ?? 8000);
       setQuestionCount(r.options.question_count ?? 10);
       setWebSearch(r.options.enable_web_search ?? false);
       setCostCap(r.options.cost_cap_usd ?? 5);
@@ -201,6 +203,7 @@ export default function NewRun() {
         target_models: selected.length ? selected : null,
         orchestrator_model: orchestratorModel.trim() || null,
         language: language.trim() || null,
+        max_tokens: maxTokens,
         question_count: questionCount,
         enable_web_search: webSearch,
         auto_approve_questions: autoApprove,
@@ -461,6 +464,18 @@ export default function NewRun() {
           <Field label="Cost cap (USD)">
             <input type="number" className="input" min={0} step={0.5} value={costCap}
               onChange={(e) => setCostCap(Number(e.target.value))} />
+          </Field>
+          <Field label={`Max tokens per model answer — ${maxTokens.toLocaleString()}`}>
+            <input type="range" className="w-full accent-ember" min={1000} max={16000} step={500}
+              value={maxTokens} onChange={(e) => setMaxTokens(Number(e.target.value))} />
+            <div className="flex justify-between text-[10px] text-dim font-mono">
+              <span>1k · brief</span><span>8k · default</span><span>16k · full</span>
+            </div>
+            <p className="text-xs text-dim mt-1">
+              How long each model's answer may run before it is cut off. Higher
+              means fuller answers and more citations, at higher cost. Long answers
+              auto-continue up to this limit.
+            </p>
           </Field>
           <label className="flex items-center gap-2 text-sm mb-2">
             <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} />
