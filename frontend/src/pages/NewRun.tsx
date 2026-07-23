@@ -120,6 +120,22 @@ export default function NewRun() {
     return list.slice(0, 400); // cap DOM nodes; refine with search
   }, [catalog, modelSearch]);
 
+  // Rough per-run cost estimate from selected models' pricing (OpenRouter only).
+  // Input tokens are dominated by web-search context (~8k/question); output ~700/question.
+  const estCost = useMemo(() => {
+    if (provider !== "openrouter" || !selected.length || !catalog.length) return null;
+    const inPerQ = webSearch ? 8000 : 60;
+    const outPerQ = 700;
+    let total = 0;
+    for (const id of selected) {
+      const m = catalog.find((x) => x.id === id);
+      if (!m) continue;
+      total += (200 + questionCount * inPerQ) * m.prompt_price
+             + questionCount * outPerQ * m.completion_price;
+    }
+    return total;
+  }, [provider, selected, catalog, questionCount, webSearch]);
+
   function toggleModel(id: string) {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   }
@@ -390,8 +406,8 @@ export default function NewRun() {
             {!hasKey && <p className="text-xs text-wine mt-1">No API key set — stub only.</p>}
           </Field>
           <Field label="Question count">
-            <input type="number" className="input" min={1} max={30} value={questionCount}
-              onChange={(e) => setQuestionCount(Number(e.target.value))} />
+            <input type="number" className="input" min={1} max={50} value={questionCount}
+              onChange={(e) => setQuestionCount(Math.max(1, Math.min(50, Number(e.target.value))))} />
           </Field>
           <Field label="Cost cap (USD)">
             <input type="number" className="input" min={0} step={0.5} value={costCap}
@@ -410,6 +426,16 @@ export default function NewRun() {
             AI insights &amp; quotes
           </label>
         </div>
+
+        {estCost !== null && (
+          <div className="card text-sm flex items-center justify-between">
+            <span className="text-muted">Estimated cost</span>
+            <span className="font-mono text-cream">
+              ~${estCost < 0.01 ? "<0.01" : estCost.toFixed(2)}
+              <span className="text-dim"> / {selected.length} models &times; {questionCount}Q</span>
+            </span>
+          </div>
+        )}
 
         {error && <div className="card border-wine/50 text-wine text-sm">{error}</div>}
 

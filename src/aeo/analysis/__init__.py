@@ -10,6 +10,7 @@ from aeo.analysis.models import (
     DomainStat,
     ModelAnalysis,
     QuestionAggregate,
+    UrlStat,
 )
 
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "DomainStat",
     "ModelAnalysis",
     "QuestionAggregate",
+    "UrlStat",
     "analyze",
 ]

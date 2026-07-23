@@ -15,7 +15,8 @@ from aeo.storage import RunStore
 _ERROR_LITERALS = {"#REF!", "#DIV/0!", "#VALUE!", "#NAME?", "#N/A", "#NULL!", "#NUM!"}
 _EXPECTED_SHEETS = {
     "Overview", "Mention Heatmap", "Question Aggregate", "Sources by Model & Q",
-    "Domain Frequency", "Competitor SoV", "Search Queries", "Insights & Quotes",
+    "Domain Frequency", "URL Attribution", "Competitor SoV", "Search Queries",
+    "Insights & Quotes",
 }
 
 

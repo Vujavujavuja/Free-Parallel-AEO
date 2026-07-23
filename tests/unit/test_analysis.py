@@ -50,9 +50,11 @@ def test_domain_extraction_and_brand_owned() -> None:
 
 
 def test_dedupe_per_question() -> None:
-    segs = {1: "https://g2.com/a https://g2.com/b https://www.g2.com/c"}
+    # Identical URLs dedupe; distinct paths on the same domain are kept (URL-level).
+    segs = {1: "https://g2.com/a https://g2.com/a https://www.g2.com/b"}
     cites = extract_citations(segs, brand_domain=None)
-    assert [c.domain for c in cites] == ["g2.com"]
+    assert [c.domain for c in cites] == ["g2.com", "g2.com"]
+    assert sorted(c.path for c in cites) == ["/a", "/b"]
 
 
 def test_reference_site_flagging() -> None:

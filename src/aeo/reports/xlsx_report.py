@@ -41,6 +41,7 @@ def write_xlsx(record: RunRecord, path: Path) -> Path:
     _question_aggregate_sheet(wb, record, analysis)
     _sources_sheet(wb, analysis)
     _domain_frequency_sheet(wb, analysis)
+    _url_attribution_sheet(wb, analysis)
     _competitor_sov_sheet(wb, analysis)
     _search_queries_sheet(wb, analysis)
     _insights_sheet(wb, analysis)
@@ -245,6 +246,28 @@ def _domain_frequency_sheet(wb: Workbook, analysis: AnalysisResult) -> None:
                 ws.cell(row=row, column=col).fill = _BRAND_FILL
     ws.column_dimensions["A"].width = 30
     ws.column_dimensions["C"].width = 50
+
+
+# --- URL Attribution --------------------------------------------------------
+
+def _url_attribution_sheet(wb: Workbook, analysis: AnalysisResult) -> None:
+    ws = wb.create_sheet("URL Attribution")
+    _header(ws, ["URL", "Host", "Type", "#Models Citing", "Brand-owned?", "Reference?"])
+    for i, u in enumerate(analysis.url_frequency):
+        row = i + 2
+        link = ws.cell(row=row, column=1, value=u.url)
+        link.hyperlink = u.url
+        link.font = Font(color="0563C1", underline="single")
+        ws.cell(row=row, column=2, value=sanitize_cell(u.host))
+        ws.cell(row=row, column=3, value=u.kind)
+        ws.cell(row=row, column=4, value=u.num_models)
+        ws.cell(row=row, column=5, value="Yes" if u.brand_owned else "No")
+        ws.cell(row=row, column=6, value="Yes" if u.is_reference else "No")
+        if u.brand_owned:
+            for col in range(1, 7):
+                ws.cell(row=row, column=col).fill = _BRAND_FILL
+    ws.column_dimensions["A"].width = 55
+    ws.column_dimensions["B"].width = 28
 
 
 # --- Competitor Share of Voice ----------------------------------------------

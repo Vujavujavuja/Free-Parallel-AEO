@@ -44,10 +44,16 @@ export default function Dashboard({ run }: { run: RunRecord }) {
 
       {/* Downloads */}
       <div className="flex flex-wrap gap-3">
-        {["pdf", "xlsx", "csv", "json"].map((fmt) => (
+        {[
+          ["pdf", "Download PDF"],
+          ["xlsx", "Download XLSX"],
+          ["csv", "Download CSV"],
+          ["json", "Download JSON"],
+          ["md", "Raw responses (MD)"],
+        ].map(([fmt, label]) => (
           <a key={fmt} className={fmt === "pdf" ? "btn-primary text-sm" : "btn-ghost text-sm"}
              href={api.reportUrl(run.id, fmt)}>
-            Download {fmt.toUpperCase()}
+            {label}
           </a>
         ))}
       </div>
@@ -86,7 +92,7 @@ export default function Dashboard({ run }: { run: RunRecord }) {
                 <XAxis type="number" stroke="#968c82" fontSize={12} />
                 <YAxis type="category" dataKey="name" stroke="#968c82" fontSize={12} width={90} />
                 <Tooltip contentStyle={{ background: "#1f1b18", border: "1px solid #322c27", color: "#ece7df" }} />
-                <Bar dataKey="value" fill="#b23656" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="value" fill="#b23656" radius={[0, 4, 4, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -194,6 +200,24 @@ export default function Dashboard({ run }: { run: RunRecord }) {
                     <td className="td">{d.num_models}</td>
                     <td className="td">{d.brand_owned ? "✓" : ""}</td>
                     <td className="td">{d.is_reference ? "★" : ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Section>
+
+        {/* URL attribution */}
+        <Section title="URL attribution (page & subdomain)">
+          <div className="overflow-y-auto max-h-72">
+            <table className="w-full">
+              <thead><tr>{["URL", "Type", "Models"].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
+              <tbody>
+                {(a.url_frequency ?? []).slice(0, 40).map((u) => (
+                  <tr key={u.url} className={u.brand_owned ? "bg-ember/10" : u.is_reference ? "bg-wine/10" : ""}>
+                    <td className="td font-mono text-xs break-all">{u.host}{u.path === "/" ? "" : u.path}</td>
+                    <td className="td"><span className="pill bg-edge">{u.kind}</span></td>
+                    <td className="td">{u.num_models}</td>
                   </tr>
                 ))}
               </tbody>

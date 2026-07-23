@@ -89,6 +89,18 @@ export interface DomainStat {
   is_reference: boolean;
 }
 
+export interface UrlStat {
+  url: string;
+  host: string;
+  path: string;
+  registrable: string;
+  kind: string;
+  num_models: number;
+  models: string[];
+  brand_owned: boolean;
+  is_reference: boolean;
+}
+
 export interface AnalysisResult {
   models: ModelAnalysis[];
   question_indices: number[];
@@ -97,6 +109,7 @@ export interface AnalysisResult {
   competitors: string[];
   competitor_sov: Record<string, Record<string, number>>;
   domain_frequency: DomainStat[];
+  url_frequency: UrlStat[];
   insights: string[];
   quotes: { model: string; quote: string }[];
 }
@@ -146,6 +159,26 @@ export interface ProgressEvent {
   log?: string | null;
 }
 
+export interface TrendPoint {
+  run_id: string;
+  created_at: string;
+  brand_mentions: number;
+  models_mentioning: number;
+  models_total: number;
+  organic: number;
+  search_driven: number;
+  absent: number;
+  top_competitor: string;
+  top_competitor_count: number;
+  cost_usd: number;
+}
+
+export interface CompanyTrend {
+  company: string;
+  runs: number;
+  points: TrendPoint[];
+}
+
 async function j<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -176,6 +209,7 @@ export const api = {
       body: JSON.stringify(req),
     }).then(j<RunRecord>),
   listRuns: () => fetch("/api/runs").then(j<RunSummary[]>),
+  trends: () => fetch("/api/trends").then(j<CompanyTrend[]>),
   getRun: (id: string) => fetch(`/api/runs/${id}`).then(j<RunRecord>),
   approve: (id: string, questions?: Question[]) =>
     fetch(`/api/runs/${id}/questions/approve`, {

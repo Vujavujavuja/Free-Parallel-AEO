@@ -25,6 +25,7 @@ _MEDIA = {
     "csv": "text/csv",
     "json": "application/json",
     "pdf": "application/pdf",
+    "md": "text/markdown",
 }
 
 

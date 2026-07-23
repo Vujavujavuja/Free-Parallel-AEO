@@ -8,8 +8,12 @@ from aeo.constants import Provenance
 
 
 class CitationRecord(BaseModel):
-    domain: str
+    domain: str  # full host, www stripped (subdomains preserved, e.g. help.datacebo.com)
     url: str
+    path: str = ""  # URL path (which page)
+    registrable: str = ""  # eTLD+1, e.g. datacebo.com
+    is_subdomain: bool = False  # host is a subdomain of the registrable domain
+    is_root: bool = True  # points at the root, not a specific page
     question_index: int | None = None
     brand_owned: bool = False
     is_reference: bool = False  # matches a user-provided reference site
@@ -56,6 +60,20 @@ class DomainStat(BaseModel):
     is_reference: bool = False
 
 
+class UrlStat(BaseModel):
+    """URL-level attribution: which exact page/subdomain is cited."""
+
+    url: str
+    host: str
+    path: str
+    registrable: str
+    kind: str  # "root" | "subdomain" | "page"
+    num_models: int
+    models: list[str]
+    brand_owned: bool = False
+    is_reference: bool = False
+
+
 class AnalysisResult(BaseModel):
     models: list[ModelAnalysis] = Field(default_factory=list)
     question_indices: list[int] = Field(default_factory=list)
@@ -66,6 +84,7 @@ class AnalysisResult(BaseModel):
     # competitor_sov[model_id][competitor] = mention count
     competitor_sov: dict[str, dict[str, int]] = Field(default_factory=dict)
     domain_frequency: list[DomainStat] = Field(default_factory=list)
+    url_frequency: list[UrlStat] = Field(default_factory=list)
     insights: list[str] = Field(default_factory=list)
     quotes: list[dict[str, str]] = Field(default_factory=list)
 

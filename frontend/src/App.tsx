@@ -23,6 +23,9 @@ export default function App() {
             <NavLink to="/runs" className={link}>
               Runs
             </NavLink>
+            <NavLink to="/trends" className={link}>
+              Trends
+            </NavLink>
           </nav>
         </div>
       </header>

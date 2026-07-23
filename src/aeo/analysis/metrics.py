@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-from aeo.analysis.citations import domain_of, extract_citations
+from aeo.analysis.citations import domain_of, extract_citations, path_of, registrable_domain
 from aeo.analysis.mentions import count_any, in_vendor_table
 from aeo.analysis.models import (
     AnalysisResult,
@@ -13,6 +13,7 @@ from aeo.analysis.models import (
     DomainStat,
     ModelAnalysis,
     QuestionAggregate,
+    UrlStat,
 )
 from aeo.analysis.queries import merge_queries
 from aeo.analysis.segmenter import segment
@@ -46,10 +47,16 @@ def _search_citations(
         if not domain or domain in seen:
             continue
         seen.add(domain)
+        path = path_of(url)
+        registrable = registrable_domain(domain)
         out.append(
             CitationRecord(
-                domain=domain, url=url, question_index=None,
-                brand_owned=bool(brand_domain) and domain == brand_domain,
+                domain=domain, url=url, path=path, registrable=registrable,
+                is_subdomain=domain != registrable, is_root=path == "",
+                question_index=None,
+                brand_owned=bool(brand_domain) and (
+                    domain == brand_domain or domain.endswith(f".{brand_domain}")
+                ),
                 is_reference=domain in refs,
                 is_search=True,
             )
@@ -153,6 +160,7 @@ def analyze(record: RunRecord) -> AnalysisResult:
 
     question_aggs = _question_aggregates(questions, model_analyses, len(models))
     domain_freq = _domain_frequency(model_analyses)
+    url_freq = _url_frequency(model_analyses)
     insights = _insights(company.name, model_analyses, competitors, domain_freq)
     quotes = _quotes(company.brand_terms, model_analyses, by_model)
 
@@ -164,6 +172,7 @@ def analyze(record: RunRecord) -> AnalysisResult:
         competitors=competitors,
         competitor_sov=competitor_sov,
         domain_frequency=domain_freq,
+        url_frequency=url_freq,
         insights=insights,
         quotes=quotes,
     )
@@ -214,6 +223,30 @@ def _domain_frequency(analyses: list[ModelAnalysis]) -> list[DomainStat]:
         for d, models in by_domain.items()
     ]
     stats.sort(key=lambda s: (s.num_models, s.domain), reverse=True)
+    return stats
+
+
+def _url_frequency(analyses: list[ModelAnalysis]) -> list[UrlStat]:
+    """Aggregate citations at the page/subdomain level (which exact URL is cited)."""
+    by_key: dict[str, set[str]] = {}
+    meta: dict[str, CitationRecord] = {}
+    for ma in analyses:
+        for c in ma.citations:
+            key = c.domain + c.path
+            by_key.setdefault(key, set()).add(ma.model_id)
+            meta.setdefault(key, c)  # first citation carries the url/classification
+    stats: list[UrlStat] = []
+    for key, models in by_key.items():
+        c = meta[key]
+        kind = "subdomain" if c.is_subdomain else ("root" if c.is_root else "page")
+        stats.append(
+            UrlStat(
+                url=c.url, host=c.domain, path=c.path or "/", registrable=c.registrable,
+                kind=kind, num_models=len(models), models=sorted(models),
+                brand_owned=c.brand_owned, is_reference=c.is_reference,
+            )
+        )
+    stats.sort(key=lambda s: (s.num_models, s.brand_owned), reverse=True)
     return stats
 
 

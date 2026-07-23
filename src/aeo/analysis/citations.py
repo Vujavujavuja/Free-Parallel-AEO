@@ -16,10 +16,30 @@ _BARE_URL_RE = re.compile(r"https?://[^\s)<>\]\"']+")
 
 
 def domain_of(url: str) -> str:
-    """Bare hostname of a URL, lowercased, without ``www.`` or trailing punctuation."""
+    """Bare hostname of a URL, lowercased, without ``www.`` or trailing punctuation.
+    Subdomains are preserved (help.datacebo.com stays distinct from datacebo.com)."""
     host = re.sub(r"^https?://", "", url.strip()).split("/")[0].split("?")[0]
     host = host.split("@")[-1].split(":")[0].lower().strip().rstrip(".,);]")
     return host.removeprefix("www.")
+
+
+def path_of(url: str) -> str:
+    """Path portion of a URL (without query/fragment), '' for root."""
+    after = re.sub(r"^https?://[^/]+", "", url.strip(), count=1)
+    path = after.split("?")[0].split("#")[0].rstrip(".,);]")
+    return "" if path in ("", "/") else path
+
+
+def registrable_domain(host: str) -> str:
+    """eTLD+1 heuristic — last two labels (datacebo.com from help.datacebo.com).
+    Handles common two-part public suffixes (co.uk, com.au, ...)."""
+    labels = host.split(".")
+    if len(labels) <= 2:
+        return host
+    two_part = {"co", "com", "org", "net", "gov", "edu", "ac"}
+    if labels[-2] in two_part and len(labels[-1]) == 2:
+        return ".".join(labels[-3:])
+    return ".".join(labels[-2:])
 
 
 def extract_urls(text: str) -> list[str]:
@@ -60,14 +80,21 @@ def extract_citations(
             domain = domain_of(url)
             if not domain:
                 continue
-            key = (idx, domain)
+            path = path_of(url)
+            # Dedup at the page level so distinct URLs on the same domain are kept.
+            key = (idx, domain + path)
             if key in seen:
                 continue
             seen.add(key)
+            registrable = registrable_domain(domain)
             citations.append(
                 CitationRecord(
                     domain=domain,
                     url=url,
+                    path=path,
+                    registrable=registrable,
+                    is_subdomain=domain != registrable,
+                    is_root=path == "",
                     question_index=idx,
                     brand_owned=_is_brand_owned(domain, brand_domain),
                     is_reference=domain in refs or any(

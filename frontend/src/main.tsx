@@ -6,6 +6,7 @@ import App from "./App";
 import NewRun from "./pages/NewRun";
 import Runs from "./pages/Runs";
 import RunView from "./pages/RunView";
+import Trends from "./pages/Trends";
 
 const router = createBrowserRouter([
   {
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
       { index: true, element: <NewRun /> },
       { path: "runs", element: <Runs /> },
       { path: "runs/:id", element: <RunView /> },
+      { path: "trends", element: <Trends /> },
     ],
   },
 ]);
