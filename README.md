@@ -4,6 +4,11 @@
 
 # Parallel-AEO
 
+![License](https://img.shields.io/github/license/Vujavujavuja/Parallel-AEO)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![Last commit](https://img.shields.io/github/last-commit/Vujavujavuja/Parallel-AEO)
+![Stars](https://img.shields.io/github/stars/Vujavujavuja/Parallel-AEO?style=social)
+
 An open-source, self-hostable AI brand-visibility scanner. You enter a company
 profile, an orchestrator model generates a set of realistic buyer questions, the
 backend sends those questions to many models in parallel through OpenRouter, and
@@ -27,6 +32,19 @@ Each run generates:
 
 Runs are also viewable in the web UI and stored on disk so they persist between
 restarts.
+
+## How it compares
+
+|                   | Parallel-AEO                | Profound      | Peec AI          | Otterly          |
+| ----------------- | --------------------------- | ------------- | ---------------- | ---------------- |
+| **Price**         | Free (MIT) + token cost     | Enterprise    | Paid subscription | Paid subscription |
+| **Self-hosted**   | Yes                         | No            | No               | No               |
+| **Models**        | Any on OpenRouter           | Fixed set     | Fixed set        | Fixed set        |
+| **Custom questions** | Yes, verbatim            | Limited       | Yes              | Limited          |
+| **Raw data export** | XLSX / CSV / JSON / PDF / MD | Varies by tier | Varies by tier  | Varies by tier   |
+
+<sub>Competitor details are approximate and change over time — check each
+vendor's site for current pricing and features.</sub>
 
 ## Example output
 
